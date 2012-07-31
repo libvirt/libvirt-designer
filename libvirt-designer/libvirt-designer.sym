@@ -3,6 +3,23 @@ LIBVIRT_DESIGNER_0.0.1 {
 	gvir_designer_init;
 	gvir_designer_init_check;
 
+	gvir_designer_domain_new;
+	gvir_designer_domain_get_type;
+	gvir_designer_domain_get_config;
+	gvir_designer_domain_get_os;
+	gvir_designer_domain_get_platform;
+	gvir_designer_domain_get_capabilities;
+
+	gvir_designer_domain_setup_machine;
+	gvir_designer_domain_setup_machine_full;
+	gvir_designer_domain_setup_container;
+	gvir_designer_domain_setup_container_full;
+
+	gvir_designer_domain_supports_machine;
+	gvir_designer_domain_supports_machine_full;
+	gvir_designer_domain_supports_container;
+	gvir_designer_domain_supports_container_full;
+
     local:
         *;
 };

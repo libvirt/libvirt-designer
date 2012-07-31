@@ -21,9 +21,11 @@ DESIGNER_GENERATED_FILES = \
 DESIGNER_HEADER_FILES = \
 			libvirt-designer.h \
 			libvirt-designer-main.h \
+			libvirt-designer-domain.h \
 			$(NULL)
 DESIGNER_SOURCE_FILES = \
 			libvirt-designer-main.c \
+			libvirt-designer-domain.c \
 			$(NULL)
 
 libvirt_designer_1_0_ladir = $(includedir)/libvirt-designer-1.0/libvirt-designer
@@ -78,6 +80,24 @@ libvirt-designer-enum-types.c: $(DESIGNER_HEADER_FILES) libvirt-designer-enum-ty
 	$(AM_V_GEN) ( $(GLIB_MKENUMS) --template $(srcdir)/libvirt-designer-enum-types.c.template $(DESIGNER_HEADER_FILES:%=$(srcdir)/%) ) | \
             sed -e "s/G_TYPE_VIR_CONFIG/GVIR_CONFIG_TYPE/" -e "s/g_vir/gvir/" > libvirt-designer-enum-types.c
 
+check_PROGRAMS = test-designer-domain
+
+TESTS = $(check_PROGRAMS)
+
+test_designer_domain_CFLAGS = \
+			-I$(top_srcdir) \
+			$(COVERAGE_CFLAGS) \
+			-I$(top_srcdir) \
+			$(LIBOSINFO_CFLAGS) \
+			$(LIBVIRT_GCONFIG_CFLAGS) \
+			$(WARN_CFLAGS2) \
+			$(NULL)
+test_designer_domain_LDADD = \
+			libvirt-designer-1.0.la
+test_designer_domain_LDFLAGS = \
+			$(LIBOSINFO_LIBS) \
+			$(LIBVIRT_GCONFIG_LIBS) \
+			$(COVERAGE_CFLAGS:-f%=-Wc,f%)
 
 if WITH_INTROSPECTION
 

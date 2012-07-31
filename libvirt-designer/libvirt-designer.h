@@ -29,5 +29,6 @@
 /* Local includes */
 #include <libvirt-designer/libvirt-designer-main.h>
 #include <libvirt-designer/libvirt-designer-enum-types.h>
+#include <libvirt-designer/libvirt-designer-domain.h>
 
 #endif /* __LIBVIRT_DESIGNER_H__ */
