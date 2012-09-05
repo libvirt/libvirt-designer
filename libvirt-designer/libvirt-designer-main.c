@@ -17,7 +17,9 @@
  * License along with this library; If not, see
  * <http://www.gnu.org/licenses/>.
  *
- * Author: Daniel P. Berrange <berrange@redhat.com>
+ * Authors:
+ *   Daniel P. Berrange <berrange@redhat.com>
+ *   Michal Privoznik <mprivozn@redhat.com>
  */
 
 #include <config.h>
@@ -27,6 +29,9 @@
 
 #include <libvirt-designer/libvirt-designer.h>
 #include <libvirt-gconfig/libvirt-gconfig.h>
+
+OsinfoLoader *osinfo_loader = NULL;
+OsinfoDb *osinfo_db = NULL;
 
 /**
  * gvir_designer_init:
@@ -79,6 +84,16 @@ gboolean gvir_designer_init_check(int *argc,
         g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
                           gvir_log_handler, NULL);
 #endif
+
+    /* Init libosinfo and load databases from default paths */
+    /* XXX maybe we want to let users tell a different path via
+     * env variable or argv */
+    osinfo_loader = osinfo_loader_new();
+    osinfo_loader_process_default_path(osinfo_loader, err);
+    if (err)
+        return FALSE;
+
+    osinfo_db = osinfo_loader_get_db(osinfo_loader);
 
     return TRUE;
 }

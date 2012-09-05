@@ -17,13 +17,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * Author: Daniel P. Berrange <berrange@redhat.com>
+ * Authors:
+ *   Daniel P. Berrange <berrange@redhat.com>
+ *   Michal Privoznik <mprivozn@redhat.com>
  */
 
 #include <config.h>
 #include <sys/utsname.h>
 
 #include "libvirt-designer/libvirt-designer.h"
+#include "libvirt-designer/libvirt-designer-internal.h"
 
 #define GVIR_DESIGNER_DOMAIN_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_DESIGNER_TYPE_DOMAIN, GVirDesignerDomainPrivate))

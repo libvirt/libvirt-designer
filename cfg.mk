@@ -119,7 +119,7 @@ sc_check_author_list:
 	test $$fail = 0
 
 
-exclude_file_name_regexp--sc_bindtextdomain = ^(libvirt-designer/tests)|(libvirt-designer/libvirt-designer-init-*)|(bin/virt-designer.c)
+exclude_file_name_regexp--sc_bindtextdomain = ^(libvirt-designer/test)|(libvirt-designer/libvirt-designer-init-*)
 
 exclude_file_name_regexp--sc_preprocessor_indentation = ^*/*.[ch]
 

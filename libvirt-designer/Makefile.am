@@ -20,6 +20,7 @@ DESIGNER_GENERATED_FILES = \
 
 DESIGNER_HEADER_FILES = \
 			libvirt-designer.h \
+			libvirt-designer-internal.h \
 			libvirt-designer-main.h \
 			libvirt-designer-domain.h \
 			$(NULL)
