@@ -15,6 +15,7 @@ Makefile.in
 /config.log
 /config.status
 /configure
+/examples/virtxml
 /libtool
 /libvirt-designer-1.0.pc
 /libvirt-designer.spec

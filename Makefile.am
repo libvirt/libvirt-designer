@@ -1,5 +1,5 @@
 
-SUBDIRS = libvirt-designer
+SUBDIRS = libvirt-designer examples
 
 ACLOCAL_AMFLAGS = -I m4
 
