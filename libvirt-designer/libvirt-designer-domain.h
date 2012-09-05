@@ -101,6 +101,9 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *d
                                                            const char *devpath,
                                                            GError **error);
 
+GVirConfigDomainInterface *gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
+                                                                      const char *network,
+                                                                      GError **error);
 G_END_DECLS
 
 #endif /* __LIBVIRT_DESIGNER_DOMAIN_H__ */

@@ -35,6 +35,7 @@
 #include <glib/gprintf.h>
 
 GList *disk_str_list = NULL;
+GList *iface_str_list = NULL;
 
 #define print_error(...) \
     print_error_impl(__FUNCTION__, __LINE__, __VA_ARGS__)
@@ -220,6 +221,79 @@ add_disk_str(const gchar *option_name,
     return TRUE;
 }
 
+static void
+add_iface(gpointer data,
+          gpointer user_data)
+{
+    GVirDesignerDomain *domain = (GVirDesignerDomain *) user_data;
+    char *network = (char *) data;
+    char *param = NULL;
+    GVirConfigDomainInterface *iface = NULL;
+    GError *error = NULL;
+
+    param = strchr(network, ',');
+    if (param) {
+        *param = '\0';
+        param++;
+    }
+
+    iface = gvir_designer_domain_add_interface_network(domain, network, &error);
+    if (error) {
+        print_error("%s", error->message);
+        exit(EXIT_FAILURE);
+    }
+
+    while (param && *param) {
+        char *key = param;
+        char *val;
+        GVirConfigDomainInterfaceLinkState link;
+
+        /* move to next token */
+        param = strchr(param, ',');
+        if (param) {
+            *param = '\0';
+            param++;
+        }
+
+        /* parse token */
+        val = strchr(key, '=');
+        if (!val) {
+            print_error("Invalid format: %s", key);
+            exit(EXIT_FAILURE);
+        }
+
+        *val = '\0';
+        val++;
+
+        if (g_str_equal(key, "mac")) {
+            gvir_config_domain_interface_set_mac(iface, val);
+        } else if (g_str_equal(key, "link")) {
+            if (g_str_equal(val, "up")) {
+                link = GVIR_CONFIG_DOMAIN_INTERFACE_LINK_STATE_UP;
+            } else if (g_str_equal(val, "down")) {
+                link = GVIR_CONFIG_DOMAIN_INTERFACE_LINK_STATE_DOWN;
+            } else {
+                print_error("Unknown value: %s", val);
+                exit(EXIT_FAILURE);
+            }
+            gvir_config_domain_interface_set_link_state(iface, link);
+        } else {
+            print_error("Unknown key: %s", key);
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+static gboolean
+add_iface_str(const gchar *option_name,
+             const gchar *value,
+             gpointer data,
+             GError **error)
+{
+    iface_str_list = g_list_append(iface_str_list, g_strdup(value));
+    return TRUE;
+}
+
 #define CHECK_ERROR \
     if (error) {                            \
         print_error("%s", error->message);  \
@@ -261,6 +335,8 @@ main(int argc, char *argv[])
             "set domain architecture", "ARCH"},
         {"disk", 'd', 0, G_OPTION_ARG_CALLBACK, add_disk_str,
             "add disk to domain with PATH being source and FORMAT its format", "PATH[,FORMAT]"},
+        {"interface", 'i', 0, G_OPTION_ARG_CALLBACK, add_iface_str,
+            "add interface with NETWORK source. Possible ARGs: mac, link={up,down}", "NETWORK[,ARG=VAL]"},
         {NULL}
     };
 
@@ -308,6 +384,8 @@ main(int argc, char *argv[])
     }
 
     g_list_foreach(disk_str_list, add_disk, domain);
+
+    g_list_foreach(iface_str_list, add_iface, domain);
 
     config = gvir_designer_domain_get_config(domain);
     xml = gvir_config_object_to_xml(GVIR_CONFIG_OBJECT(config));

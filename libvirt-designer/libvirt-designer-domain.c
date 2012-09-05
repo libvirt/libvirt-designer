@@ -49,6 +49,11 @@ G_DEFINE_TYPE(GVirDesignerDomain, gvir_designer_domain, G_TYPE_OBJECT);
 
 #define GVIR_DESIGNER_DOMAIN_ERROR gvir_designer_domain_error_quark()
 
+typedef enum {
+    GVIR_DESIGNER_DOMAIN_NIC_TYPE_NETWORK,
+    /* add new type here */
+} GVirDesignerDomainNICType;
+
 static GQuark
 gvir_designer_domain_error_quark(void)
 {
@@ -921,5 +926,83 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *d
                                              "raw",
                                              NULL,
                                              error);
+    return ret;
+}
+
+static const gchar *
+gvir_designer_domain_get_preferred_nic_model(GVirDesignerDomain *design,
+                                             GError **error)
+{
+    const gchar *ret = NULL;
+    OsinfoDeviceLink *dev_link = NULL;
+
+    dev_link = gvir_designer_domain_get_preferred_device(design, "network", error);
+    if (!dev_link)
+        goto cleanup;
+
+    ret = osinfo_devicelink_get_driver(dev_link);
+
+cleanup:
+    if (dev_link)
+        g_object_unref(dev_link);
+    return ret;
+}
+
+static GVirConfigDomainInterface *
+gvir_designer_domain_add_interface_full(GVirDesignerDomain *design,
+                                        GVirDesignerDomainNICType type,
+                                        const char *network,
+                                        GError **error)
+{
+    GVirConfigDomainInterface *ret;
+    const gchar *model = NULL;
+
+    model = gvir_designer_domain_get_preferred_nic_model(design, error);
+
+    switch (type) {
+    case GVIR_DESIGNER_DOMAIN_NIC_TYPE_NETWORK:
+        ret = GVIR_CONFIG_DOMAIN_INTERFACE(gvir_config_domain_interface_network_new());
+        gvir_config_domain_interface_network_set_source(GVIR_CONFIG_DOMAIN_INTERFACE_NETWORK(ret),
+                                                        network);
+        break;
+    default:
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "Unsupported interface type '%d'", type);
+        goto cleanup;
+    }
+
+    if (model)
+        gvir_config_domain_interface_set_model(ret, model);
+
+    gvir_config_domain_add_device(design->priv->config, GVIR_CONFIG_DOMAIN_DEVICE(ret));
+
+cleanup:
+    return ret;
+}
+
+/**
+ * gvir_designer_domain_add_interface_network:
+ * @design: (transfer none): the domain designer instance
+ * @network: (transfer none): network name
+ *
+ * Add new network interface card into @design. The interface is
+ * of 'network' type with @network used as the source network.
+ *
+ * Returns: (transfer none): the pointer to the new interface.
+ */
+GVirConfigDomainInterface *
+gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
+                                           const char *network,
+                                           GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+
+    GVirConfigDomainInterface *ret = NULL;
+
+    ret = gvir_designer_domain_add_interface_full(design,
+                                                  GVIR_DESIGNER_DOMAIN_NIC_TYPE_NETWORK,
+                                                  network,
+                                                  error);
+
     return ret;
 }
