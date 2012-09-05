@@ -93,6 +93,13 @@ gboolean gvir_designer_domain_setup_container_full(GVirDesignerDomain *design,
                                                    const char *arch,
                                                    GError **error);
 
+GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *design,
+                                                         const char *filepath,
+                                                         const char *format,
+                                                         GError **error);
+GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *design,
+                                                           const char *devpath,
+                                                           GError **error);
 
 G_END_DECLS
 

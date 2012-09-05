@@ -37,6 +37,12 @@ struct _GVirDesignerDomainPrivate
     GVirConfigCapabilities *caps;
     OsinfoOs *os;
     OsinfoPlatform *platform;
+
+    OsinfoDeployment *deployment;
+    /* next disk targets */
+    unsigned int ide;
+    unsigned int virtio;
+    unsigned int sata;
 };
 
 G_DEFINE_TYPE(GVirDesignerDomain, gvir_designer_domain, G_TYPE_OBJECT);
@@ -134,6 +140,8 @@ static void gvir_designer_domain_finalize(GObject *object)
     g_object_unref(priv->os);
     g_object_unref(priv->platform);
     g_object_unref(priv->caps);
+    if (priv->deployment)
+        g_object_unref(priv->deployment);
 
     G_OBJECT_CLASS(gvir_designer_domain_parent_class)->finalize(object);
 }
@@ -661,5 +669,257 @@ gboolean gvir_designer_domain_setup_container_full(GVirDesignerDomain *design,
 cleanup:
     if (guest)
         g_object_unref(guest);
+    return ret;
+}
+
+static GList *
+gvir_designer_domain_get_supported_disk_bus_types(GVirDesignerDomain *design)
+{
+    GVirDesignerDomainPrivate *priv = design->priv;
+    OsinfoDeviceList *dev_list;
+    GHashTable *bus_hash = g_hash_table_new(g_str_hash, g_str_equal);
+    GList *ret = NULL;
+    GList *devs = NULL, *dev_iterator;
+
+    dev_list = osinfo_os_get_devices_by_property(priv->os, "class", "block", TRUE);
+    if (!dev_list)
+        goto cleanup;
+
+    devs = osinfo_list_get_elements(OSINFO_LIST(dev_list));
+    for (dev_iterator = devs; dev_iterator; dev_iterator = dev_iterator->next) {
+        OsinfoDevice *dev = OSINFO_DEVICE(dev_iterator->data);
+        const gchar *bus = osinfo_device_get_bus_type(dev);
+
+        if (bus)
+            g_hash_table_add(bus_hash, g_strdup(bus));
+    }
+
+    ret = g_hash_table_get_keys(bus_hash);
+    if (ret)
+        ret = g_list_copy(ret);
+
+cleanup:
+    g_hash_table_destroy(bus_hash);
+    return ret;
+}
+
+static OsinfoDeviceLink *
+gvir_designer_domain_get_preferred_device(GVirDesignerDomain *design,
+                                          const char *class,
+                                          GError **error)
+{
+    GVirDesignerDomainPrivate *priv = design->priv;
+    OsinfoFilter *filter = osinfo_filter_new();
+    OsinfoDeviceLinkFilter *filter_link = NULL;
+    OsinfoDeployment *deployment = priv->deployment;
+    OsinfoDeviceLink *dev_link = NULL;
+
+    if (!deployment) {
+        priv->deployment = deployment = osinfo_db_find_deployment(osinfo_db,
+                                                                  priv->os,
+                                                                  priv->platform);
+        if (!deployment) {
+            g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                        "Unable to find any deployment in libosinfo database");
+            goto cleanup;
+        }
+    }
+
+    osinfo_filter_add_constraint(filter, "class", class);
+    filter_link = osinfo_devicelinkfilter_new(filter);
+    dev_link = osinfo_deployment_get_preferred_device_link(deployment, OSINFO_FILTER(filter_link));
+
+cleanup:
+    if (filter_link)
+        g_object_unref(filter_link);
+    if (filter)
+        g_object_unref(filter);
+    return dev_link;
+}
+
+static const gchar *
+gvir_designer_domain_get_preferred_disk_bus_type(GVirDesignerDomain *design,
+                                                 GError **error)
+{
+    OsinfoDevice *dev;
+    OsinfoDeviceLink *dev_link = gvir_designer_domain_get_preferred_device(design,
+                                                                           "block",
+                                                                           error);
+    const gchar *ret = NULL;
+
+    if (!dev_link)
+        return NULL;
+
+    dev = osinfo_devicelink_get_target(dev_link);
+    if (dev)
+        ret = osinfo_device_get_bus_type(dev);
+
+    return ret;
+}
+
+static gchar *
+gvir_designer_domain_next_disk_target(GVirDesignerDomain *design,
+                                      GVirConfigDomainDiskBus bus)
+{
+    gchar *ret = NULL;
+    GVirDesignerDomainPrivate *priv = design->priv;
+
+    switch (bus) {
+    case GVIR_CONFIG_DOMAIN_DISK_BUS_IDE:
+        ret = g_strdup_printf("hd%c", 'a' + priv->ide++);
+        break;
+    case GVIR_CONFIG_DOMAIN_DISK_BUS_VIRTIO:
+        ret = g_strdup_printf("vd%c", 'a' + priv->virtio++);
+        break;
+    case GVIR_CONFIG_DOMAIN_DISK_BUS_SATA:
+        ret = g_strdup_printf("sd%c", 'a' + priv->sata++);
+        break;
+    case GVIR_CONFIG_DOMAIN_DISK_BUS_FDC:
+    case GVIR_CONFIG_DOMAIN_DISK_BUS_SCSI:
+    case GVIR_CONFIG_DOMAIN_DISK_BUS_XEN:
+    case GVIR_CONFIG_DOMAIN_DISK_BUS_USB:
+    case GVIR_CONFIG_DOMAIN_DISK_BUS_UML:
+    default:
+        /* not supported yet */
+        /* XXX should we fallback to ide/virtio? */
+        break;
+    }
+
+    return ret;
+}
+
+static GVirConfigDomainDisk *
+gvir_designer_domain_add_disk_full(GVirDesignerDomain *design,
+                                   GVirConfigDomainDiskType type,
+                                   const char *path,
+                                   const char *format,
+                                   gchar *target,
+                                   GError **error)
+{
+    GVirDesignerDomainPrivate *priv = design->priv;
+    GVirConfigDomainDisk *disk = NULL;
+    GVirConfigDomainDiskBus bus;
+    gchar *target_gen = NULL;
+    const gchar *bus_str = NULL;
+    GList *bus_str_list = NULL, *item = NULL;
+
+    /* Guess preferred disk bus */
+    bus_str = gvir_designer_domain_get_preferred_disk_bus_type(design, error);
+    if (!bus_str) {
+        /* And fallback if fails */
+        bus_str_list = gvir_designer_domain_get_supported_disk_bus_types(design);
+        if (!bus_str_list) {
+            if (!*error)
+                g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                            "Unable to find any disk bus type");
+            goto error;
+        }
+
+        item = g_list_first(bus_str_list);
+        bus_str = item->data;
+        if (!bus_str)
+            goto error;
+    }
+
+    g_clear_error(error);
+
+    disk = gvir_config_domain_disk_new();
+    gvir_config_domain_disk_set_type(disk, type);
+    gvir_config_domain_disk_set_source(disk, path);
+    gvir_config_domain_disk_set_driver_name(disk, "qemu");
+    if (format)
+        gvir_config_domain_disk_set_driver_type(disk, format);
+    if (g_str_equal(bus_str, "ide")) {
+        bus = GVIR_CONFIG_DOMAIN_DISK_BUS_IDE;
+    } else if (g_str_equal(bus_str, "virtio") ||
+               g_str_equal(bus_str, "pci")) {
+        bus = GVIR_CONFIG_DOMAIN_DISK_BUS_VIRTIO;
+    } else if (g_str_equal(bus_str, "sata")) {
+        bus = GVIR_CONFIG_DOMAIN_DISK_BUS_SATA;
+    } else {
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "unsupported disk bus type '%s'", bus_str);
+        goto error;
+    }
+
+    gvir_config_domain_disk_set_target_bus(disk, bus);
+
+    if (!target) {
+        target = target_gen = gvir_designer_domain_next_disk_target(design, bus);
+        if (!target_gen) {
+            g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                        "unable to generate target name for bus '%s'", bus_str);
+            goto error;
+        }
+    }
+    gvir_config_domain_disk_set_target_dev(disk, target);
+
+    g_list_free(bus_str_list);
+    g_free(target_gen);
+
+    gvir_config_domain_add_device(priv->config, GVIR_CONFIG_DOMAIN_DEVICE(disk));
+
+    return disk;
+
+error:
+    g_free(target_gen);
+    g_list_free(bus_str_list);
+    if (disk)
+        g_object_unref(disk);
+    return NULL;
+}
+/**
+ * gvir_designer_domain_add_disk_file:
+ * @design: (transfer none): the domain designer instance
+ * @filepath: (transfer none): the path to a file
+ * @format: (transfer none): disk format
+ *
+ * Add a new disk to the domain.
+ *
+ * Returns: (transfer none): the pointer to new disk.
+ * If something fails NULL is returned and @error is set.
+ */
+GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *design,
+                                                         const char *filepath,
+                                                         const char *format,
+                                                         GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+
+    GVirConfigDomainDisk *ret = NULL;
+
+    ret = gvir_designer_domain_add_disk_full(design,
+                                             GVIR_CONFIG_DOMAIN_DISK_FILE,
+                                             filepath,
+                                             format,
+                                             NULL,
+                                             error);
+    return ret;
+}
+
+/**
+ * gvir_designer_domain_add_disk_device:
+ * @design: (transfer none): the domain designer instance
+ * @devpath: (transfer none): path to the device
+ *
+ * Add given device as a new disk to the domain designer instance.
+ *
+ * Returns: (transfer none): the pointer to the new disk.
+ * If something fails NULL is returned and @error is set.
+ */
+GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *design,
+                                                           const char *devpath,
+                                                           GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+
+    GVirConfigDomainDisk *ret = NULL;
+
+    ret = gvir_designer_domain_add_disk_full(design,
+                                             GVIR_CONFIG_DOMAIN_DISK_BLOCK,
+                                             devpath,
+                                             "raw",
+                                             NULL,
+                                             error);
     return ret;
 }
