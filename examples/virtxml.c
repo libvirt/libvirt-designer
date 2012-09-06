@@ -35,6 +35,8 @@
 
 GList *disk_str_list = NULL;
 GList *iface_str_list = NULL;
+OsinfoLoader *loader = NULL;
+OsinfoDb *db = NULL;
 
 #define print_error(...) \
     print_error_impl(__FUNCTION__, __LINE__, __VA_ARGS__)
@@ -58,12 +60,11 @@ print_error_impl(const char *funcname,
     fprintf(stderr,"\n");
 }
 
-static OsinfoDb *
-get_default_osinfo_db(void)
+static gboolean
+load_osinfo(void)
 {
     GError *err = NULL;
-    OsinfoLoader *loader = NULL;
-    OsinfoDb *ret = NULL;
+    gboolean ret = FALSE;
 
     loader = osinfo_loader_new();
     osinfo_loader_process_default_path(loader, &err);
@@ -72,8 +73,9 @@ get_default_osinfo_db(void)
         goto cleanup;
     }
 
-    ret = osinfo_loader_get_db(loader);
-    g_object_ref(ret);
+    db = osinfo_loader_get_db(loader);
+    g_object_ref(db);
+    ret = TRUE;
 
 cleanup:
     g_object_unref(loader);
@@ -96,13 +98,12 @@ print_oses(const gchar *option_name,
            gpointer data,
            GError **error)
 {
-    OsinfoDb *db = get_default_osinfo_db();
     OsinfoOsList *list = NULL;
     GList *oses = NULL;
     GList *os_iter;
     int ret = EXIT_FAILURE;
 
-    if (!db)
+    if (!db && !load_osinfo())
         goto cleanup;
 
     printf("  Operating System ID\n"
@@ -126,8 +127,6 @@ print_oses(const gchar *option_name,
 cleanup:
     if (list)
         g_object_unref(list);
-    if (db)
-        g_object_unref(db);
 
     exit(ret);
     return TRUE;
@@ -139,13 +138,12 @@ print_platforms(const gchar *option_name,
                 gpointer data,
                 GError **error)
 {
-    OsinfoDb *db = get_default_osinfo_db();
     OsinfoPlatformList *list = NULL;
     GList *platforms = NULL;
     GList *platform_iter;
     int ret = EXIT_FAILURE;
 
-    if (!db)
+    if (!db && !load_osinfo())
         goto cleanup;
 
     printf("  Platform ID\n"
@@ -169,8 +167,6 @@ print_platforms(const gchar *option_name,
 cleanup:
     if (list)
         g_object_unref(list);
-    if (db)
-        g_object_unref(db);
 
     exit(ret);
     return TRUE;
@@ -293,13 +289,34 @@ add_iface_str(const gchar *option_name,
     return TRUE;
 }
 
+static OsinfoEntity *
+find_entity_by_short_id(OsinfoList *ent_list,
+                        const char *short_id)
+{
+    OsinfoEntity *ret = NULL;
+    GList *list, *list_iterator;
+
+    list = osinfo_list_get_elements(ent_list);
+    for (list_iterator = list; list_iterator; list_iterator = list_iterator->next) {
+        const char *id = osinfo_entity_get_param_value(list_iterator->data,
+                                                       OSINFO_PRODUCT_PROP_SHORT_ID);
+
+        if (!g_strcmp0(id, short_id)) {
+            ret = list_iterator->data;
+            g_object_ref(ret);
+            break;
+        }
+    }
+
+    return ret;
+}
+
 static OsinfoOs *
 find_os(const gchar *os_str)
 {
-    OsinfoDb *db = get_default_osinfo_db();
     OsinfoOs *ret = NULL;
 
-    if (!db)
+    if (!db && !load_osinfo())
         return NULL;
 
     ret = osinfo_db_get_os(db, os_str);
@@ -310,12 +327,11 @@ find_os(const gchar *os_str)
 static OsinfoOs *
 find_os_by_short_id(const char *short_id)
 {
-    OsinfoDb *db = get_default_osinfo_db();
     OsinfoOs *ret = NULL;
     OsinfoOsList *oses = NULL;
-    GList *list, *list_it;
+    OsinfoEntity *found = NULL;
 
-    if (!db)
+    if (!db && !load_osinfo())
         return NULL;
 
     oses = osinfo_db_get_os_list(db);
@@ -323,21 +339,15 @@ find_os_by_short_id(const char *short_id)
     if (!oses)
         goto cleanup;
 
-    list = osinfo_list_get_elements(OSINFO_LIST(oses));
-    for (list_it = list; list_it; list_it = list_it->next) {
-        const char *id = osinfo_entity_get_param_value(list_it->data,
-                                                       OSINFO_PRODUCT_PROP_SHORT_ID);
+    found = find_entity_by_short_id(OSINFO_LIST(oses), short_id);
 
-        if (!g_strcmp0(id, short_id)) {
-            ret = OSINFO_OS(list_it->data);
-            g_object_ref(ret);
-            break;
-        }
-    }
-
-    g_object_unref(oses);
+    if (!found)
+        goto cleanup;
+    ret = OSINFO_OS(found);
 
 cleanup:
+    if (oses)
+        g_object_unref(oses);
     return ret;
 }
 
@@ -346,11 +356,10 @@ guess_os_from_disk(GList *disk_list)
 {
     OsinfoOs *ret = NULL;
     GList *list_it = NULL;
-    OsinfoLoader *loader = osinfo_loader_new();
-    OsinfoDb *db;
 
-    osinfo_loader_process_default_path(loader, NULL);
-    db = osinfo_loader_get_db(loader);
+    if (!db && !load_osinfo())
+        return NULL;
+
     for (list_it = disk_list; list_it; list_it = list_it->next) {
         char *path = (char *) list_it->data;
         char *sep = strchr(path, ',');
@@ -375,7 +384,88 @@ guess_os_from_disk(GList *disk_list)
         }
     }
 
-    g_clear_object(&loader);
+    return ret;
+}
+
+static OsinfoPlatform *
+find_platform(const char *platform_str)
+{
+    OsinfoPlatform *ret = NULL;
+
+    if (!db && !load_osinfo())
+        return NULL;
+
+    ret = osinfo_db_get_platform(db, platform_str);
+
+    return ret;
+}
+
+static OsinfoPlatform *
+find_platform_by_short_id(const char *short_id)
+{
+    OsinfoPlatform *ret = NULL;
+    OsinfoPlatformList *platforms = NULL;
+    OsinfoEntity *found = NULL;
+
+    if (!db && !load_osinfo())
+        goto cleanup;
+
+    platforms = osinfo_db_get_platform_list(db);
+
+    if (!platforms)
+        goto cleanup;
+
+    found = find_entity_by_short_id(OSINFO_LIST(platforms), short_id);
+
+    if (!found)
+        goto cleanup;
+
+    ret = OSINFO_PLATFORM(found);
+
+cleanup:
+    if (platforms)
+        g_object_unref(platforms);
+    return ret;
+}
+
+static OsinfoPlatform *
+guess_platform_from_connect(GVirConnection *conn)
+{
+    OsinfoPlatform *ret = NULL;
+    gchar *hv_type = NULL;
+    gulong ver, major, minor, release;
+    char *short_id = NULL, *type = NULL;
+
+    hv_type = gvir_connection_get_hypervisor_name(conn, NULL);
+    ver = gvir_connection_get_version(conn, NULL);
+
+    if (!hv_type || !ver) {
+        print_error("Unable to get hypervisor and its version");
+        exit(EXIT_FAILURE);
+    }
+
+    /* do some mappings:
+     * QEMU -> kvm
+     * Xen -> xen
+     */
+    type = g_ascii_strdown(hv_type, -1);
+    if (g_str_equal(type, "qemu")) {
+        g_free(type);
+        type = g_strdup("kvm");
+    }
+
+    major = ver / 1000000;
+    ver %= 1000000;
+    minor = ver / 1000;
+    release = ver % 1000 ;
+
+    short_id = g_strdup_printf("%s-%lu.%lu.%lu", type, major, minor, release);
+
+    ret = find_platform_by_short_id(short_id);
+
+    g_free(short_id);
+    g_free(hv_type);
+    g_free(type);
     return ret;
 }
 
@@ -433,10 +523,6 @@ main(int argc, char *argv[])
         g_print ("option parsing failed: %s\n", error->message);
         return EXIT_FAILURE;
     }
-    if (!platform_str) {
-        print_error("Platform was not specified");
-        return EXIT_FAILURE;
-    }
 
     conn = gvir_connection_new(connect_uri);
     gvir_connection_open(conn, NULL, &error);
@@ -444,8 +530,6 @@ main(int argc, char *argv[])
 
     caps = gvir_connection_get_capabilities(conn, &error);
     CHECK_ERROR;
-
-    platform = osinfo_platform_new(platform_str);
 
     if (os_str) {
         os = find_os(os_str);
@@ -457,6 +541,19 @@ main(int argc, char *argv[])
 
     if (!os) {
         print_error("Operating system could not be find or guessed");
+        goto cleanup;
+    }
+
+    if (platform_str) {
+        platform = find_platform(platform_str);
+        if (!platform)
+            platform = find_platform_by_short_id(platform_str);
+    } else {
+        platform = guess_platform_from_connect(conn);
+    }
+
+    if (!platform) {
+        print_error("Platform was not specified or could not be guessed");
         goto cleanup;
     }
 
