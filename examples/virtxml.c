@@ -491,6 +491,8 @@ main(int argc, char *argv[])
     static char *platform_str = NULL;
     static char *arch_str = NULL;
     static char *connect_uri = NULL;
+    static char *resources_str = NULL;
+    GVirDesignerDomainResources resources;
     GOptionContext *context;
 
     static GOptionEntry entries[] =
@@ -511,6 +513,8 @@ main(int argc, char *argv[])
             "add disk to domain with PATH being source and FORMAT its format", "PATH[,FORMAT]"},
         {"interface", 'i', 0, G_OPTION_ARG_CALLBACK, add_iface_str,
             "add interface with NETWORK source. Possible ARGs: mac, link={up,down}", "NETWORK[,ARG=VAL]"},
+        {"resources", 'r', 0, G_OPTION_ARG_STRING, &resources_str,
+            "Set minimal or recommended values for cpu count and RAM amount", "{minimal|recommended}"},
         {NULL}
     };
 
@@ -565,6 +569,25 @@ main(int argc, char *argv[])
     if (arch_str) {
         gvir_designer_domain_setup_container_full(domain, arch_str, &error);
         CHECK_ERROR;
+    }
+
+    if (resources_str) {
+        if (g_str_equal(resources_str, "minimal") ||
+            g_str_equal(resources_str, "min"))
+            resources = GVIR_DESIGNER_DOMAIN_RESOURCES_MINIMAL;
+        else if (g_str_equal(resources_str, "recommended") ||
+                 g_str_equal(resources_str, "rec"))
+            resources = GVIR_DESIGNER_DOMAIN_RESOURCES_RECOMMENDED;
+        else {
+            print_error("Unknown value '%s' for resources", resources_str);
+            goto cleanup;
+        }
+        gvir_designer_domain_setup_resources(domain, resources, &error);
+        CHECK_ERROR;
+    } else {
+        gvir_designer_domain_setup_resources(domain,
+                                             GVIR_DESIGNER_DOMAIN_RESOURCES_RECOMMENDED,
+                                             NULL);
     }
 
     g_list_foreach(disk_str_list, add_disk, domain);

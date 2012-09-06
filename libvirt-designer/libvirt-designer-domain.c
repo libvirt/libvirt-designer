@@ -1033,3 +1033,94 @@ gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
 
     return ret;
 }
+
+
+static void
+gvir_designer_domain_get_resources(OsinfoResourcesList *res_list,
+                                   const gchar *design_arch,
+                                   gint *design_n_cpus,
+                                   gint64 *design_ram)
+{
+    GList *elem_list, *elem_iterator;
+
+    if (!res_list)
+        return;
+
+    elem_list = osinfo_list_get_elements(OSINFO_LIST(res_list));
+    for (elem_iterator = elem_list; elem_iterator; elem_iterator = elem_iterator->next) {
+        OsinfoResources *res = OSINFO_RESOURCES(elem_iterator->data);
+        const char *arch = osinfo_resources_get_architecture(res);
+        gint n_cpus = -1;
+        gint64 ram = -1;
+
+        if (g_str_equal(arch, "all") ||
+            g_str_equal(arch, design_arch)) {
+            n_cpus = osinfo_resources_get_n_cpus(res);
+            ram = osinfo_resources_get_ram(res);
+            if (n_cpus > 0) {
+                *design_n_cpus = n_cpus;
+            }
+            if (ram > 0) {
+                /* libosinfo returns RAM in B, libvirt-gconfig takes it in KB */
+                *design_ram = ram / 1024;
+            }
+            break;
+        }
+    }
+}
+
+
+/**
+ * gvir_designer_domain_setup_resources:
+ * @design: (transfer none): the domain designer instance
+ * @req: (transfer none): requirements to set
+ *
+ * Set minimal or recommended resources on @design.
+ *
+ * Returns: (transfer none): TRUE when successfully set, FALSE otherwise.
+ */
+gboolean gvir_designer_domain_setup_resources(GVirDesignerDomain *design,
+                                              GVirDesignerDomainResources req,
+                                              GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
+    gboolean ret = FALSE;
+    OsinfoResourcesList *res_list_min = NULL, *res_list_rec = NULL;
+    GVirConfigDomainOs *os = gvir_config_domain_get_os(design->priv->config);
+    const gchar *design_arch = os ? gvir_config_domain_os_get_arch(os) : "";
+    gint n_cpus = -1;
+    gint64 ram = -1;
+
+    /* If user request recommended settings those may just override
+     * only a few settings when compared to minimal. So we must implement
+     * inheritance here. */
+    res_list_min = osinfo_os_get_minimum_resources(design->priv->os);
+    res_list_rec = osinfo_os_get_recommended_resources(design->priv->os);
+    if (req ==GVIR_DESIGNER_DOMAIN_RESOURCES_MINIMAL) {
+        gvir_designer_domain_get_resources(res_list_min, design_arch,
+                                           &n_cpus, &ram);
+    } else if (req == GVIR_DESIGNER_DOMAIN_RESOURCES_RECOMMENDED) {
+        gvir_designer_domain_get_resources(res_list_min, design_arch,
+                                           &n_cpus, &ram);
+        gvir_designer_domain_get_resources(res_list_rec, design_arch,
+                                           &n_cpus, &ram);
+    } else {
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "Unknown resources argument: '%d'", req);
+        goto cleanup;
+    }
+
+    if ((n_cpus <= 0) && (ram <= 0)) {
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "Unable to find resources in libosinfo database");
+        goto cleanup;
+    }
+
+    if (n_cpus > 0)
+        gvir_config_domain_set_vcpus(design->priv->config, n_cpus);
+    if (ram > 0)
+        gvir_config_domain_set_memory(design->priv->config, ram);
+
+cleanup:
+    return ret;
+}

@@ -39,6 +39,11 @@ G_BEGIN_DECLS
 #define GVIR_DESIGNER_IS_DOMAIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GVIR_DESIGNER_TYPE_DOMAIN))
 #define GVIR_DESIGNER_DOMAIN_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GVIR_DESIGNER_TYPE_DOMAIN, GVirDesignerDomainClass))
 
+typedef enum {
+    GVIR_DESIGNER_DOMAIN_RESOURCES_MINIMAL,
+    GVIR_DESIGNER_DOMAIN_RESOURCES_RECOMMENDED,
+} GVirDesignerDomainResources;
+
 typedef struct _GVirDesignerDomain GVirDesignerDomain;
 typedef struct _GVirDesignerDomainPrivate GVirDesignerDomainPrivate;
 typedef struct _GVirDesignerDomainClass GVirDesignerDomainClass;
@@ -104,6 +109,11 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *d
 GVirConfigDomainInterface *gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
                                                                       const char *network,
                                                                       GError **error);
+
+gboolean gvir_designer_domain_setup_resources(GVirDesignerDomain *design,
+                                              GVirDesignerDomainResources req,
+                                              GError **error);
+
 G_END_DECLS
 
 #endif /* __LIBVIRT_DESIGNER_DOMAIN_H__ */
