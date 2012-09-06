@@ -293,6 +293,92 @@ add_iface_str(const gchar *option_name,
     return TRUE;
 }
 
+static OsinfoOs *
+find_os(const gchar *os_str)
+{
+    OsinfoDb *db = get_default_osinfo_db();
+    OsinfoOs *ret = NULL;
+
+    if (!db)
+        return NULL;
+
+    ret = osinfo_db_get_os(db, os_str);
+
+    return ret;
+}
+
+static OsinfoOs *
+find_os_by_short_id(const char *short_id)
+{
+    OsinfoDb *db = get_default_osinfo_db();
+    OsinfoOs *ret = NULL;
+    OsinfoOsList *oses = NULL;
+    GList *list, *list_it;
+
+    if (!db)
+        return NULL;
+
+    oses = osinfo_db_get_os_list(db);
+
+    if (!oses)
+        goto cleanup;
+
+    list = osinfo_list_get_elements(OSINFO_LIST(oses));
+    for (list_it = list; list_it; list_it = list_it->next) {
+        const char *id = osinfo_entity_get_param_value(list_it->data,
+                                                       OSINFO_PRODUCT_PROP_SHORT_ID);
+
+        if (!g_strcmp0(id, short_id)) {
+            ret = OSINFO_OS(list_it->data);
+            g_object_ref(ret);
+            break;
+        }
+    }
+
+    g_object_unref(oses);
+
+cleanup:
+    return ret;
+}
+
+static OsinfoOs *
+guess_os_from_disk(GList *disk_list)
+{
+    OsinfoOs *ret = NULL;
+    GList *list_it = NULL;
+    OsinfoLoader *loader = osinfo_loader_new();
+    OsinfoDb *db;
+
+    osinfo_loader_process_default_path(loader, NULL);
+    db = osinfo_loader_get_db(loader);
+    for (list_it = disk_list; list_it; list_it = list_it->next) {
+        char *path = (char *) list_it->data;
+        char *sep = strchr(path, ',');
+        OsinfoMedia *media = NULL;
+        OsinfoMedia *matched_media = NULL;
+
+        if (sep)
+            path = g_strndup(path, sep-path);
+
+        media = osinfo_media_create_from_location(path, NULL, NULL);
+        if (!media)
+            continue;
+
+        ret = osinfo_db_guess_os_from_media(db, media, &matched_media);
+
+        if (sep)
+            g_free(path);
+
+        if (ret) {
+            g_object_ref(ret);
+            break;
+        }
+    }
+
+    g_clear_object(&loader);
+    return ret;
+}
+
 #define CHECK_ERROR \
     if (error) {                            \
         print_error("%s", error->message);  \
@@ -347,10 +433,6 @@ main(int argc, char *argv[])
         g_print ("option parsing failed: %s\n", error->message);
         return EXIT_FAILURE;
     }
-    if (!os_str) {
-        print_error("Operating system was not specified");
-        return EXIT_FAILURE;
-    }
     if (!platform_str) {
         print_error("Platform was not specified");
         return EXIT_FAILURE;
@@ -363,8 +445,20 @@ main(int argc, char *argv[])
     caps = gvir_connection_get_capabilities(conn, &error);
     CHECK_ERROR;
 
-    os = osinfo_os_new(os_str);
     platform = osinfo_platform_new(platform_str);
+
+    if (os_str) {
+        os = find_os(os_str);
+        if (!os)
+            os = find_os_by_short_id(os_str);
+    } else {
+        os = guess_os_from_disk(disk_str_list);
+    }
+
+    if (!os) {
+        print_error("Operating system could not be find or guessed");
+        goto cleanup;
+    }
 
     domain = gvir_designer_domain_new(os, platform, caps);
 
