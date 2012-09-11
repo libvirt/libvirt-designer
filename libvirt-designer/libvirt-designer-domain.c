@@ -677,6 +677,7 @@ cleanup:
     return ret;
 }
 
+
 static GList *
 gvir_designer_domain_get_supported_disk_bus_types(GVirDesignerDomain *design)
 {
@@ -707,6 +708,7 @@ cleanup:
     g_hash_table_destroy(bus_hash);
     return ret;
 }
+
 
 static OsinfoDeviceLink *
 gvir_designer_domain_get_preferred_device(GVirDesignerDomain *design,
@@ -742,6 +744,7 @@ cleanup:
     return dev_link;
 }
 
+
 static const gchar *
 gvir_designer_domain_get_preferred_disk_bus_type(GVirDesignerDomain *design,
                                                  GError **error)
@@ -761,6 +764,7 @@ gvir_designer_domain_get_preferred_disk_bus_type(GVirDesignerDomain *design,
 
     return ret;
 }
+
 
 static gchar *
 gvir_designer_domain_next_disk_target(GVirDesignerDomain *design,
@@ -792,6 +796,7 @@ gvir_designer_domain_next_disk_target(GVirDesignerDomain *design,
 
     return ret;
 }
+
 
 static GVirConfigDomainDisk *
 gvir_designer_domain_add_disk_full(GVirDesignerDomain *design,
@@ -890,6 +895,8 @@ error:
         g_object_unref(disk);
     return NULL;
 }
+
+
 /**
  * gvir_designer_domain_add_disk_file:
  * @design: (transfer none): the domain designer instance
@@ -919,6 +926,7 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *des
     return ret;
 }
 
+
 /**
  * gvir_designer_domain_add_disk_device:
  * @design: (transfer none): the domain designer instance
@@ -946,6 +954,7 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *d
     return ret;
 }
 
+
 static const gchar *
 gvir_designer_domain_get_preferred_nic_model(GVirDesignerDomain *design,
                                              GError **error)
@@ -964,6 +973,7 @@ cleanup:
         g_object_unref(dev_link);
     return ret;
 }
+
 
 static GVirConfigDomainInterface *
 gvir_designer_domain_add_interface_full(GVirDesignerDomain *design,
@@ -996,6 +1006,7 @@ gvir_designer_domain_add_interface_full(GVirDesignerDomain *design,
 cleanup:
     return ret;
 }
+
 
 /**
  * gvir_designer_domain_add_interface_network:
