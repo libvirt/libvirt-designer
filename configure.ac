@@ -12,8 +12,8 @@ AM_SILENT_RULES([yes])
 
 LIBOSINFO_REQUIRED=0.0.5
 LIBVIRT_GCONFIG_REQUIRED=0.0.9
+LIBVIRT_GOBJECT_REQUIRED=0.0.8
 GOBJECT_INTROSPECTION_REQUIRED=0.10.8
-LIBVIRT_REQUIRED=0.9.0
 
 LIBVIRT_DESIGNER_MAJOR_VERSION=`echo $VERSION | awk -F. '{print $1}'`
 LIBVIRT_DESIGNER_MINOR_VERSION=`echo $VERSION | awk -F. '{print $2}'`
@@ -46,7 +46,6 @@ LIBVIRT_DESIGNER_COMPILE_WARNINGS
 
 PKG_CHECK_MODULES(LIBOSINFO, libosinfo-1.0 >= $LIBOSINFO_REQUIRED)
 PKG_CHECK_MODULES(LIBVIRT_GCONFIG, libvirt-gconfig-1.0 >= $LIBVIRT_GCONFIG_REQUIRED)
-PKG_CHECK_MODULES(LIBVIRT, libvirt >= $LIBVIRT_REQUIRED)
 
 LIBVIRT_DESIGNER_GETTEXT
 LIBVIRT_DESIGNER_GTK_MISC
@@ -54,6 +53,23 @@ LIBVIRT_DESIGNER_WIN32
 LIBVIRT_DESIGNER_COVERAGE
 LIBVIRT_DESIGNER_INTROSPECTION
 
+AC_ARG_ENABLE([examples],
+              AS_HELP_STRING([--enable-examples], [enable virtxml example. Default is check, meaning it is enabled as long as libvirt-gobject is installed]),
+              [],[enable_examples=check])
+
+if test "x$enable_examples" != "xno" ; then
+    PKG_CHECK_MODULES([LIBVIRT_GOBJECT],
+                      [libvirt-gobject-1.0 >= $LIBVIRT_GOBJECT_REQUIRED],
+                      [enable_examples=yes],
+                      [
+                       if test "x$enable_examples" = "xcheck" ; then
+                           enable_examples=no
+                       else
+                           AC_MSG_ERROR([Cannot enable examples because libvirt-gobject is not available])
+                       fi
+                      ])
+fi
+AM_CONDITIONAL(WITH_EXAMPLES, [test "x$enable_examples" = "xyes"])
 
 AC_OUTPUT(Makefile
           libvirt-designer/Makefile
@@ -66,9 +82,11 @@ AC_MSG_NOTICE([Configuration summary])
 AC_MSG_NOTICE([=====================])
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([])
+AC_MSG_NOTICE([        examples: $enable_examples])
+AC_MSG_NOTICE([])
+AC_MSG_NOTICE([])
 AC_MSG_NOTICE([ Libraries:])
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([       LIBOSINFO: $LIBOSINFO_CFLAGS $LIBOSINFO_LIBS])
 AC_MSG_NOTICE([ LIBVIRT_GCONFIG: $LIBVIRT_GCONFIG_CFLAGS $LIBVIRT_GCONFIG_LIBS])
-AC_MSG_NOTICE([         LIBVIRT: $LIBVIRT_CFLAGS $LIBVIRT_LIBS])
 AC_MSG_NOTICE([])

@@ -22,8 +22,7 @@
 
 #include <config.h>
 #include <libvirt-designer/libvirt-designer.h>
-#include <libvirt/libvirt.h>
-#include <libvirt/virterror.h>
+#include <libvirt-gobject/libvirt-gobject.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -310,8 +309,7 @@ main(int argc, char *argv[])
     GVirConfigCapabilities *caps = NULL;
     GVirConfigDomain *config = NULL;
     GVirDesignerDomain *domain = NULL;
-    virConnectPtr conn = NULL;
-    char *caps_str = NULL;
+    GVirConnection *conn = NULL;
     gchar *xml = NULL;
     static char *os_str = NULL;
     static char *platform_str = NULL;
@@ -358,20 +356,15 @@ main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    conn = virConnectOpenAuth(connect_uri, virConnectAuthPtrDefault, VIR_CONNECT_RO);
-    if (!conn) {
-        print_error("Unable to connect to libvirt");
-        return EXIT_FAILURE;
-    }
+    conn = gvir_connection_new(connect_uri);
+    gvir_connection_open(conn, NULL, &error);
+    CHECK_ERROR;
 
-    if ((caps_str = virConnectGetCapabilities(conn)) == NULL) {
-        print_error("failed to get capabilities");
-        goto cleanup;
-    }
+    caps = gvir_connection_get_capabilities(conn, &error);
+    CHECK_ERROR;
 
     os = osinfo_os_new(os_str);
     platform = osinfo_platform_new(platform_str);
-    caps = gvir_config_capabilities_new_from_xml(caps_str, NULL);
 
     domain = gvir_designer_domain_new(os, platform, caps);
 
@@ -395,6 +388,7 @@ main(int argc, char *argv[])
     ret = EXIT_SUCCESS;
 
 cleanup:
-    virConnectClose(conn);
+    if (conn)
+        gvir_connection_close(conn);
     return ret;
 }
