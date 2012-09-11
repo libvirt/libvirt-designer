@@ -806,6 +806,8 @@ gvir_designer_domain_add_disk_full(GVirDesignerDomain *design,
     GVirConfigDomainDiskBus bus;
     gchar *target_gen = NULL;
     const gchar *bus_str = NULL;
+    const char *driver_name;
+    int virt_type;
     GList *bus_str_list = NULL, *item = NULL;
 
     /* Guess preferred disk bus */
@@ -828,10 +830,25 @@ gvir_designer_domain_add_disk_full(GVirDesignerDomain *design,
 
     g_clear_error(error);
 
+    virt_type = gvir_config_domain_get_virt_type(priv->config);
+    switch (virt_type) {
+    case GVIR_CONFIG_DOMAIN_VIRT_QEMU:
+    case GVIR_CONFIG_DOMAIN_VIRT_KQEMU:
+    case GVIR_CONFIG_DOMAIN_VIRT_KVM:
+        driver_name = "qemu";
+        break;
+        /* add new virt type here */
+    default:
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "Unsupported virt type %d", virt_type);
+        goto error;
+        break;
+    }
+
     disk = gvir_config_domain_disk_new();
     gvir_config_domain_disk_set_type(disk, type);
     gvir_config_domain_disk_set_source(disk, path);
-    gvir_config_domain_disk_set_driver_name(disk, "qemu");
+    gvir_config_domain_disk_set_driver_name(disk, driver_name);
     if (format)
         gvir_config_domain_disk_set_driver_type(disk, format);
     if (g_str_equal(bus_str, "ide")) {
