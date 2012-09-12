@@ -97,7 +97,7 @@ print_oses(const gchar *option_name,
            GError **error)
 {
     OsinfoDb *db = get_default_osinfo_db();
-    OsinfoOsList *list;
+    OsinfoOsList *list = NULL;
     GList *oses = NULL;
     GList *os_iter;
     int ret = EXIT_FAILURE;
@@ -140,7 +140,7 @@ print_platforms(const gchar *option_name,
                 GError **error)
 {
     OsinfoDb *db = get_default_osinfo_db();
-    OsinfoPlatformList *list;
+    OsinfoPlatformList *list = NULL;
     GList *platforms = NULL;
     GList *platform_iter;
     int ret = EXIT_FAILURE;
