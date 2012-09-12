@@ -701,8 +701,7 @@ gvir_designer_domain_get_supported_disk_bus_types(GVirDesignerDomain *design)
     }
 
     ret = g_hash_table_get_keys(bus_hash);
-    if (ret)
-        ret = g_list_copy(ret);
+    ret = g_list_copy(ret);
 
 cleanup:
     g_hash_table_destroy(bus_hash);
