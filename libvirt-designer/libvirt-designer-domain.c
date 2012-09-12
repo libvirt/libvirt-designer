@@ -820,7 +820,7 @@ gvir_designer_domain_add_disk_full(GVirDesignerDomain *design,
         /* And fallback if fails */
         bus_str_list = gvir_designer_domain_get_supported_disk_bus_types(design);
         if (!bus_str_list) {
-            if (!*error)
+            if (error && !*error)
                 g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
                             "Unable to find any disk bus type");
             goto error;
