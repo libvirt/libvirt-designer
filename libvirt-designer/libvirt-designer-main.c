@@ -89,9 +89,7 @@ gboolean gvir_designer_init_check(int *argc,
     /* XXX maybe we want to let users tell a different path via
      * env variable or argv */
     osinfo_loader = osinfo_loader_new();
-    osinfo_loader_process_default_path(osinfo_loader, err);
-    if (err)
-        return FALSE;
+    osinfo_loader_process_default_path(osinfo_loader, NULL);
 
     osinfo_db = osinfo_loader_get_db(osinfo_loader);
 
