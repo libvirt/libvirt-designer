@@ -75,6 +75,7 @@ AC_OUTPUT(Makefile
           libvirt-designer/Makefile
           libvirt-designer.spec
           libvirt-designer-1.0.pc
+          docs/Makefile
           examples/Makefile)
 
 AC_MSG_NOTICE([])
