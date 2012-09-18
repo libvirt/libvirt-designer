@@ -14,7 +14,7 @@
 Name: @PACKAGE@
 Version: @VERSION@
 Release: 1%{?dist}%{?extra_release}
-Summary: libvirt configuration designer
+Summary: Libvirt configuration designer
 Group: Development/Tools
 License: LGPLv2+
 URL: http://libvirt.org/
@@ -28,11 +28,11 @@ BuildRequires: gobject-introspection-devel
 
 %package libs
 Group: Development/Libraries
-Summary: libvirt configuration designer libraries
+Summary: Libvirt configuration designer libraries
 
 %package devel
 Group: Development/Libraries
-Summary: libvirt configuration designer development headers
+Summary: Libvirt configuration designer development headers
 Requires: %{name}-libs = %{version}-%{release}
 Requires: libvirt-gconfig-devel >= 0.0.9
 
@@ -41,7 +41,7 @@ This package provides the libvirt configuration designer command
 line tools.
 
 %description libs
-This package provides the libvirt configuration designer runtime
+This package provides the libvirt configuration designer run-time
 libraries.
 
 %description devel
