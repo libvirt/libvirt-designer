@@ -901,6 +901,7 @@ error:
  * @design: (transfer none): the domain designer instance
  * @filepath: (transfer none): the path to a file
  * @format: (transfer none): disk format
+ * @error: return location for a #GError, or NULL
  *
  * Add a new disk to the domain.
  *
@@ -930,6 +931,7 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *des
  * gvir_designer_domain_add_disk_device:
  * @design: (transfer none): the domain designer instance
  * @devpath: (transfer none): path to the device
+ * @error: return location for a #GError, or NULL
  *
  * Add given device as a new disk to the domain designer instance.
  *
@@ -1011,6 +1013,7 @@ cleanup:
  * gvir_designer_domain_add_interface_network:
  * @design: (transfer none): the domain designer instance
  * @network: (transfer none): network name
+ * @error: return location for a #GError, or NULL
  *
  * Add new network interface card into @design. The interface is
  * of 'network' type with @network used as the source network.
@@ -1074,6 +1077,7 @@ gvir_designer_domain_get_resources(OsinfoResourcesList *res_list,
  * gvir_designer_domain_setup_resources:
  * @design: (transfer none): the domain designer instance
  * @req: (transfer none): requirements to set
+ * @error: return location for a #GError, or NULL
  *
  * Set minimal or recommended resources on @design.
  *
