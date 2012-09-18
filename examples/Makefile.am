@@ -18,6 +18,15 @@ virtxml_LDFLAGS = \
 		$(LIBVIRT_GCONFIG_LIBS) \
 		$(LIBVIRT_GOBJECT_LIBS)
 
+POD2MAN = pod2man -c "Virtualization Support" -r "$(PACKAGE)-$(VERSION)"
+
+%.1: %.c Makefile
+	$(AM_V_GEN)$(POD2MAN) $< $@
+
 if WITH_EXAMPLES
 bin_PROGRAMS = virtxml
+
+man1_MANS = virtxml.1
+
+CLEANFILES = $(man1_MANS)
 endif

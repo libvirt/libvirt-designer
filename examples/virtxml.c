@@ -606,3 +606,130 @@ cleanup:
         gvir_connection_close(conn);
     return ret;
 }
+
+/*
+=pod
+
+
+=head1 NAME
+
+virtxml - Generate domain XML
+
+=head1 SYNOPSIS
+
+B<virtxml> [I<OPTION>]...
+
+=head1 DESCRIPTION
+
+B<virtxml> is a command line tool for generating XML documents for
+libvirt domains. However, it cooperates with libosinfo database to guess
+the correct combination of attributes (e.g. disk driver, NIC model).
+
+B<virtxml> does not feed libvirt with generated XML though. For now,
+it's a proof of concept.
+
+=head1 OPTIONS
+
+The basic structure of arguments passed to B<virtxml> is:
+
+  virtxml [-c URI] [OPTION] [OPTION] ...
+
+However, arguments have no pre-defined order so users can type them
+in any order they like.
+
+=head2 General Options
+
+=over 2
+
+=item -c URI, --connect=URI
+
+The libvirt connection URI which is used for querying capabilities of the
+host.
+
+=item --list-os
+
+List IDs of operating systems known to libosinfo
+
+=item --list-platform
+
+List IDs of platforms known to libosinfo
+
+=item -o OS, --os=OS
+
+Specify operating system that will be run on the domain. I<OS> is an ID
+which can be obtained via B<--list-os>.
+
+=item -p PLATFORM, --platform=PLATFORM
+
+Specify platform (hypervisor) under which the domain will run. I<PLATFORM>
+is and ID which can be obtained via I<--list-platform>.
+
+=item -a ARCH, --architecture=ARCH
+
+Set domain's architecture
+
+=item -d PATH[,FORMAT] --disk=PATH[,FORMAT]
+
+Add I<PATH> as a disk to the domain. To specify its format (e.g. raw,
+qcow2, phy) use I<FORMAT>.
+
+=item -i NETWORK[,ARG=VAL]
+
+Add an interface of type network with I<NETWORK> source. Moreover, some
+other configuration knobs can be set (possible I<ARG>s): I<mac>,
+I<link>={up|down}
+
+=item -r RESOURCE, --resources=RESOURCES
+
+Set I<minimal> or I<recommended> resources on the domain XML. By default,
+the I<recommended> is used.
+
+=back
+
+Usually, both B<--os> and B<--platform> are required as they are needed to
+make the right decision on driver, model, ...  when adding a new device.
+However, when adding a disk which is an installation medium (e.g. a CD-ROM or
+DVD), B<virtxml> tries to guess the OS. Something similar is done with
+platform. Usually, the platform is guessed from the connection URI.
+
+=head1 EXAMPLES
+
+Domain with Fedora 17 from locally stored ISO and one NIC with mac
+00:11:22:33:44:55 and link set down:
+
+  # virtxml -d Fedora-17-x86_64-Live-KDE.iso \
+            -i default,mac=00:11:22:33:44:55,link=down
+
+To add multiple devices just use appropriate argument multiple times:
+
+  # virtxml -d /tmp/Fedora-17-x86_64-Live-KDE.iso,raw \
+            -d /var/lib/libvirt/images/f17.img,qcow2 \
+            -i default,mac=00:11:22:33:44:55,link=down \
+            -i blue_network \
+            -r minimal
+
+=head1 AUTHORS
+
+Written by Michal Privoznik, Daniel P. Berrange and team of other
+contributors. See the AUTHORS file in the source distribution for the
+complete list of credits.
+
+=head1 BUGS
+
+Report any bugs discovered to the libvirt community via the mailing
+list C<http://libvirt.org/contact.html> or bug tracker C<http://libvirt.org/bugs.html>.
+Alternatively report bugs to your software distributor / vendor.
+
+=head1 COPYRIGHT
+
+Copyright (C) 2012 Red Hat, Inc. and various contributors.
+This is free software. You may redistribute copies of it under the terms of
+the GNU General Public License C<http://www.gnu.org/licenses/gpl.html>. There
+is NO WARRANTY, to the extent permitted by law.
+
+=head1 SEE ALSO
+
+C<virsh(1)>, C<virt-clone(1)>, C<virt-manager(1)>, the project website C<http://virt-manager.org>
+
+=cut
+*/
