@@ -21,6 +21,7 @@ URL: http://libvirt.org/
 Source0: http://libvirt.org/%{name}/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: libvirt-gconfig-devel >= 0.0.9
+BuildRequires: libvirt-gobject-devel >= 0.1.3
 %if %{with_introspection}
 BuildRequires: gobject-introspection-devel
 %endif
@@ -64,7 +65,6 @@ headers
 
 %install
 rm -rf $RPM_BUILD_ROOT
-chmod a-x examples/*.py examples/*.pl examples/*.js
 %__make install  DESTDIR=$RPM_BUILD_ROOT
 rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-designer-1.0.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-designer-1.0.la
@@ -77,23 +77,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%{_sysconfdir}/bash_completion.d/virt-designer-service-bash-completion.sh
-%config(noreplace) %{_sysconfdir}/cron.daily/virt-designer-service.logrotate
-%dir %{_sysconfdir}/libvirt-designer/services
-%{_bindir}/virt-designer
-%{_bindir}/virt-designer-service
-%{_mandir}/man1/virt-designer.1*
-%{_mandir}/man1/virt-designer-service.1*
+%{_bindir}/virtxml
 
 %files libs
 %defattr(-,root,root,-)
 %doc README COPYING AUTHORS ChangeLog NEWS
-%dir %{_sysconfdir}/libvirt-designer
-%dir %{_sysconfdir}/libvirt-designer/scratch
-%config %{_sysconfdir}/libvirt-designer/scratch/README
-%{_libexecdir}/libvirt-designer-init-common
-%{_libexecdir}/libvirt-designer-init-lxc
-%{_libexecdir}/libvirt-designer-init-qemu
 %{_libdir}/libvirt-designer-1.0.so.*
 %if %{with_introspection}
 %{_libdir}/girepository-1.0/LibvirtDesigner-1.0.typelib
@@ -101,10 +89,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-,root,root,-)
-%doc examples/virt-designer.pl
-%doc examples/virt-designer.py
-%doc examples/virt-designer.js
-%doc examples/virt-designer-mkinitrd.py
 %{_libdir}/libvirt-designer-1.0.so
 %{_libdir}/pkgconfig/libvirt-designer-1.0.pc
 %dir %{_includedir}/libvirt-designer-1.0
@@ -114,6 +98,6 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with_introspection}
 %{_datadir}/gir-1.0/LibvirtDesigner-1.0.gir
 %endif
-%{_datadir}/gtk-doc/html/Libvirt-designer
+%{_datadir}/gtk-doc/html/libvirt-designer
 
 %changelog
