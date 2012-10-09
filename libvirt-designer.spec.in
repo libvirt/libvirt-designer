@@ -25,6 +25,7 @@ BuildRequires: libvirt-gobject-devel >= 0.1.3
 %if %{with_introspection}
 BuildRequires: gobject-introspection-devel
 %endif
+BuildRequires: libosinfo-devel >= 0.0.5
 
 %package libs
 Group: Development/Libraries
