@@ -1,4 +1,4 @@
-AC_INIT(libvirt-designer, 0.0.1)
+AC_INIT(libvirt-designer, 0.0.2)
 AC_CONFIG_SRCDIR(libvirt-designer/libvirt-designer.h)
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([config.h])
