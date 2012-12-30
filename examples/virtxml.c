@@ -70,14 +70,13 @@ load_osinfo(void)
     osinfo_loader_process_default_path(loader, &err);
     if (err) {
         print_error("Unable to load default libosinfo DB: %s", err->message);
-        goto cleanup;
+        g_clear_error(&err);
     }
 
     db = osinfo_loader_get_db(loader);
     g_object_ref(db);
     ret = TRUE;
 
-cleanup:
     g_object_unref(loader);
     return ret;
 }
