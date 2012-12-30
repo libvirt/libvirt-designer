@@ -364,7 +364,6 @@ guess_os_from_disk(GList *disk_list)
         char *path = (char *) list_it->data;
         char *sep = strchr(path, ',');
         OsinfoMedia *media = NULL;
-        OsinfoMedia *matched_media = NULL;
 
         if (sep)
             path = g_strndup(path, sep-path);
@@ -373,15 +372,13 @@ guess_os_from_disk(GList *disk_list)
         if (!media)
             continue;
 
-        ret = osinfo_db_guess_os_from_media(db, media, &matched_media);
+        if (osinfo_db_identify_media(db, media)) {
+            g_object_get(G_OBJECT(media), "os", &ret, NULL);
+            break;
+        }
 
         if (sep)
             g_free(path);
-
-        if (ret) {
-            g_object_ref(ret);
-            break;
-        }
     }
 
     return ret;
