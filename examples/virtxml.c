@@ -369,6 +369,10 @@ guess_os_from_disk(GList *disk_list)
             path = g_strndup(path, sep-path);
 
         media = osinfo_media_create_from_location(path, NULL, NULL);
+
+        if (sep)
+            g_free(path);
+
         if (!media)
             continue;
 
@@ -376,9 +380,6 @@ guess_os_from_disk(GList *disk_list)
             g_object_get(G_OBJECT(media), "os", &ret, NULL);
             break;
         }
-
-        if (sep)
-            g_free(path);
     }
 
     return ret;
@@ -595,12 +596,22 @@ main(int argc, char *argv[])
     xml = gvir_config_object_to_xml(GVIR_CONFIG_OBJECT(config));
 
     g_printf("%s\n", xml);
+    g_free(xml);
 
     ret = EXIT_SUCCESS;
 
 cleanup:
+    if (os)
+        g_object_unref(G_OBJECT(os));
+    if (platform)
+        g_object_unref(G_OBJECT(platform));
+    if (caps)
+        g_object_unref(G_OBJECT(caps));
+    if (domain)
+        g_object_unref(G_OBJECT(domain));
     if (conn)
         gvir_connection_close(conn);
+
     return ret;
 }
 
