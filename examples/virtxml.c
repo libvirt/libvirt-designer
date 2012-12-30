@@ -35,7 +35,6 @@
 
 GList *disk_str_list = NULL;
 GList *iface_str_list = NULL;
-OsinfoLoader *loader = NULL;
 OsinfoDb *db = NULL;
 
 #define print_error(...) \
@@ -65,6 +64,7 @@ load_osinfo(void)
 {
     GError *err = NULL;
     gboolean ret = FALSE;
+    OsinfoLoader *loader = NULL;
 
     loader = osinfo_loader_new();
     osinfo_loader_process_default_path(loader, &err);
