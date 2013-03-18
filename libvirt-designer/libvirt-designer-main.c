@@ -30,9 +30,6 @@
 #include <libvirt-designer/libvirt-designer.h>
 #include <libvirt-gconfig/libvirt-gconfig.h>
 
-OsinfoLoader *osinfo_loader = NULL;
-OsinfoDb *osinfo_db = NULL;
-
 /**
  * gvir_designer_init:
  * @argc: (inout): pointer to application's argc
@@ -56,7 +53,6 @@ static void gvir_log_handler(const gchar *log_domain G_GNUC_UNUSED,
     if (user_data)
         fprintf(stderr, "%s\n", message);
 }
-
 
 /**
  * gvir_designer_init_check:
@@ -84,14 +80,6 @@ gboolean gvir_designer_init_check(int *argc,
         g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
                           gvir_log_handler, NULL);
 #endif
-
-    /* Init libosinfo and load databases from default paths */
-    /* XXX maybe we want to let users tell a different path via
-     * env variable or argv */
-    osinfo_loader = osinfo_loader_new();
-    osinfo_loader_process_default_path(osinfo_loader, NULL);
-
-    osinfo_db = osinfo_loader_get_db(osinfo_loader);
 
     return TRUE;
 }

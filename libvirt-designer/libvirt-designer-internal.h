@@ -24,7 +24,4 @@
 #ifndef __LIBVIRT_DESIGNER_INTERNAL_H__
 #define __LIBVIRT_DESIGNER_INTERNAL_H__
 
-extern OsinfoLoader *osinfo_loader;
-extern OsinfoDb *osinfo_db;
-
 #endif /* __LIBVIRT_DESIGNER_INTERNAL_H__ */

@@ -558,7 +558,7 @@ main(int argc, char *argv[])
         goto cleanup;
     }
 
-    domain = gvir_designer_domain_new(os, platform, caps);
+    domain = gvir_designer_domain_new(db, os, platform, caps);
 
     gvir_designer_domain_setup_machine(domain, &error);
     CHECK_ERROR;

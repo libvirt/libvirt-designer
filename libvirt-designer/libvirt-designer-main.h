@@ -24,6 +24,8 @@
 #error "Only <libvirt-gdesigner/libvirt-gdesigner.h> can be included directly."
 #endif
 
+#include <osinfo/osinfo.h>
+
 #ifndef __LIBVIRT_DESIGNER_MAIN_H__
 #define __LIBVIRT_DESIGNER_MAIN_H__
 

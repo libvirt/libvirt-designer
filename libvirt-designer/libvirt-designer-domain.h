@@ -66,7 +66,8 @@ struct _GVirDesignerDomainClass
 
 GType gvir_designer_domain_get_type(void);
 
-GVirDesignerDomain *gvir_designer_domain_new(OsinfoOs *os,
+GVirDesignerDomain *gvir_designer_domain_new(OsinfoDb *osinfo_db,
+                                             OsinfoOs *os,
                                              OsinfoPlatform *platform,
                                              GVirConfigCapabilities *caps);
 

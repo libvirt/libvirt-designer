@@ -35,6 +35,7 @@ struct _GVirDesignerDomainPrivate
 {
     GVirConfigDomain *config;
     GVirConfigCapabilities *caps;
+    OsinfoDb *osinfo_db;
     OsinfoOs *os;
     OsinfoPlatform *platform;
 
@@ -66,6 +67,7 @@ enum {
     PROP_OS,
     PROP_PLATFORM,
     PROP_CAPS,
+    PROP_OSINFO_DB,
 };
 
 static void gvir_designer_domain_get_property(GObject *object,
@@ -81,6 +83,10 @@ static void gvir_designer_domain_get_property(GObject *object,
     switch (prop_id) {
     case PROP_CONFIG:
         g_value_set_object(value, priv->config);
+        break;
+
+    case PROP_OSINFO_DB:
+        g_value_set_object(value, priv->osinfo_db);
         break;
 
     case PROP_OS:
@@ -112,6 +118,11 @@ static void gvir_designer_domain_set_property(GObject *object,
     GVirDesignerDomainPrivate *priv = design->priv;
 
     switch (prop_id) {
+    case PROP_OSINFO_DB:
+        if (priv->osinfo_db)
+            g_object_unref(priv->osinfo_db);
+        priv->osinfo_db = g_value_dup_object(value);
+        break;
     case PROP_OS:
         if (priv->os)
             g_object_unref(priv->os);
@@ -147,6 +158,8 @@ static void gvir_designer_domain_finalize(GObject *object)
     g_object_unref(priv->caps);
     if (priv->deployment)
         g_object_unref(priv->deployment);
+    if (priv->osinfo_db)
+        g_object_unref(priv->osinfo_db);
 
     G_OBJECT_CLASS(gvir_designer_domain_parent_class)->finalize(object);
 }
@@ -170,6 +183,16 @@ static void gvir_designer_domain_class_init(GVirDesignerDomainClass *klass)
                                                         G_PARAM_READABLE |
                                                         G_PARAM_STATIC_STRINGS));
 
+    g_object_class_install_property(object_class,
+                                    PROP_OSINFO_DB,
+                                    g_param_spec_object("osinfo-db",
+                                                        "Osinfo Database",
+                                                        "libosinfo database",
+                                                        OSINFO_TYPE_DB,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
     g_object_class_install_property(object_class,
                                     PROP_OS,
                                     g_param_spec_object("os",
@@ -215,11 +238,13 @@ static void gvir_designer_domain_init(GVirDesignerDomain *design)
 }
 
 
-GVirDesignerDomain *gvir_designer_domain_new(OsinfoOs *os,
+GVirDesignerDomain *gvir_designer_domain_new(OsinfoDb *db,
+                                             OsinfoOs *os,
                                              OsinfoPlatform *platform,
                                              GVirConfigCapabilities *caps)
 {
     return GVIR_DESIGNER_DOMAIN(g_object_new(GVIR_DESIGNER_TYPE_DOMAIN,
+                                             "osinfo-db", db,
                                              "os", os,
                                              "platform", platform,
                                              "capabilities", caps,
@@ -721,7 +746,12 @@ gvir_designer_domain_get_preferred_device(GVirDesignerDomain *design,
     OsinfoDeviceLink *dev_link = NULL;
 
     if (!deployment) {
-        priv->deployment = deployment = osinfo_db_find_deployment(osinfo_db,
+        if (!priv->osinfo_db) {
+            g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                        "Unable to find any deployment in libosinfo database");
+            goto cleanup;
+        }
+        priv->deployment = deployment = osinfo_db_find_deployment(priv->osinfo_db,
                                                                   priv->os,
                                                                   priv->platform);
         if (!deployment) {
