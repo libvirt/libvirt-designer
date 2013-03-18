@@ -442,13 +442,13 @@ guess_platform_from_connect(GVirConnection *conn)
     }
 
     /* do some mappings:
-     * QEMU -> kvm
+     * QEMU -> qemu-kvm
      * Xen -> xen
      */
     type = g_ascii_strdown(hv_type, -1);
-    if (g_str_equal(type, "qemu")) {
+    if (g_str_equal(type, "qemu") && ver <= 1002000) {
         g_free(type);
-        type = g_strdup("kvm");
+        type = g_strdup("qemu-kvm");
     }
 
     major = ver / 1000000;
