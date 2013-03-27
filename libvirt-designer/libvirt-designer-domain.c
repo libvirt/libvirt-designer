@@ -313,6 +313,95 @@ end:
 }
 
 
+static void gvir_designer_domain_add_clock(GVirDesignerDomain *design)
+{
+    GVirConfigDomainClock *clock;
+    GVirConfigDomainTimer *timer;
+    GVirConfigDomainClockOffset offset;
+
+    clock = gvir_config_domain_clock_new();
+    offset = GVIR_CONFIG_DOMAIN_CLOCK_UTC;
+    if (design->priv->os != NULL) {
+        const gchar *short_id;
+
+        short_id = osinfo_product_get_short_id(OSINFO_PRODUCT(design->priv->os));
+        if (short_id != NULL && g_str_has_suffix(short_id, "win")) {
+            offset = GVIR_CONFIG_DOMAIN_CLOCK_LOCALTIME;
+        }
+    }
+    gvir_config_domain_clock_set_offset(clock, offset);
+
+    timer = GVIR_CONFIG_DOMAIN_TIMER(gvir_config_domain_timer_rtc_new());
+    gvir_config_domain_timer_set_tick_policy(timer,
+                                             GVIR_CONFIG_DOMAIN_TIMER_TICK_POLICY_CATCHUP);
+    gvir_config_domain_clock_add_timer(clock, timer);
+    g_object_unref(G_OBJECT(timer));
+
+    timer = GVIR_CONFIG_DOMAIN_TIMER(gvir_config_domain_timer_pit_new());
+    gvir_config_domain_timer_set_tick_policy(timer,
+                                             GVIR_CONFIG_DOMAIN_TIMER_TICK_POLICY_DELAY);
+    gvir_config_domain_clock_add_timer(clock, timer);
+    g_object_unref(G_OBJECT(timer));
+
+    gvir_config_domain_set_clock(design->priv->config, clock);
+    g_object_unref(G_OBJECT(clock));
+}
+
+static void gvir_designer_domain_add_power_management(GVirDesignerDomain *design)
+{
+    GVirConfigDomainPowerManagement *pm;
+
+    pm = gvir_config_domain_power_management_new();
+    gvir_config_domain_power_management_set_mem_suspend_enabled(pm, FALSE);
+    gvir_config_domain_power_management_set_disk_suspend_enabled(pm, FALSE);
+
+    gvir_config_domain_set_power_management(design->priv->config, pm);
+    g_object_unref(G_OBJECT(pm));
+}
+
+static void gvir_designer_domain_set_lifecycle(GVirDesignerDomain *design)
+{
+    gvir_config_domain_set_lifecycle(design->priv->config,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_ON_POWEROFF,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_DESTROY);
+    gvir_config_domain_set_lifecycle(design->priv->config,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_ON_REBOOT,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_RESTART);
+    gvir_config_domain_set_lifecycle(design->priv->config,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_ON_CRASH,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_DESTROY);
+}
+
+static void gvir_designer_domain_add_console(GVirDesignerDomain *design)
+{
+    GVirConfigDomainConsole *console;
+    GVirConfigDomainChardevSourcePty *pty;
+
+    console = gvir_config_domain_console_new();
+    pty = gvir_config_domain_chardev_source_pty_new();
+    gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(console),
+                                          GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(pty));
+    g_object_unref(G_OBJECT(pty));
+
+    gvir_config_domain_add_device(design->priv->config,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(console));
+    g_object_unref(G_OBJECT(console));
+}
+
+static void gvir_designer_domain_add_input(GVirDesignerDomain *design)
+{
+    GVirConfigDomainInput *input;
+
+    input = gvir_config_domain_input_new();
+    gvir_config_domain_input_set_device_type(input,
+                                             GVIR_CONFIG_DOMAIN_INPUT_DEVICE_TABLET);
+
+    gvir_config_domain_add_device(design->priv->config,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(input));
+    g_object_unref(G_OBJECT(input));
+}
+
+
 static void gvir_designer_domain_init(GVirDesignerDomain *design)
 {
     GVirDesignerDomainPrivate *priv;
@@ -669,6 +758,12 @@ gvir_designer_domain_setup_guest(GVirDesignerDomain *design,
         priv->config,
         gvir_config_capabilities_guest_domain_get_virt_type(domain));
     gvir_config_domain_set_os(priv->config, os);
+
+    gvir_designer_domain_add_clock(design);
+    gvir_designer_domain_add_power_management(design);
+    gvir_designer_domain_set_lifecycle(design);
+    gvir_designer_domain_add_console(design);
+    gvir_designer_domain_add_input(design);
 
     ret = TRUE;
 cleanup:
