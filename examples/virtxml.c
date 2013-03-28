@@ -126,6 +126,7 @@ print_oses(const gchar *option_name,
 cleanup:
     if (list)
         g_object_unref(list);
+    g_list_free(oses);
 
     exit(ret);
     return TRUE;
@@ -166,6 +167,7 @@ print_platforms(const gchar *option_name,
 cleanup:
     if (list)
         g_object_unref(list);
+    g_list_free(platforms);
 
     exit(ret);
     return TRUE;
@@ -306,6 +308,7 @@ find_entity_by_short_id(OsinfoList *ent_list,
             break;
         }
     }
+    g_list_free(list);
 
     return ret;
 }

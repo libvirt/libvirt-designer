@@ -737,6 +737,9 @@ gvir_designer_domain_get_supported_disk_bus_types(GVirDesignerDomain *design)
     ret = g_list_copy(ret);
 
 cleanup:
+    g_list_free(devs);
+    if (dev_list != NULL)
+        g_object_unref(G_OBJECT(dev_list));
     g_hash_table_destroy(bus_hash);
     return ret;
 }
@@ -1108,6 +1111,7 @@ gvir_designer_domain_get_resources(OsinfoResourcesList *res_list,
             break;
         }
     }
+    g_list_free(elem_list);
 }
 
 
@@ -1164,5 +1168,11 @@ gboolean gvir_designer_domain_setup_resources(GVirDesignerDomain *design,
         gvir_config_domain_set_memory(design->priv->config, ram);
 
 cleanup:
+    if (res_list_min != NULL)
+        g_object_unref(G_OBJECT(res_list_min));
+    if (res_list_rec != NULL)
+        g_object_unref(G_OBJECT(res_list_rec));
+    g_object_unref(G_OBJECT(os));
+
     return ret;
 }
