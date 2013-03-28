@@ -352,14 +352,19 @@ gvir_designer_domain_get_arch_native(GVirDesignerDomain *design)
         gvir_config_capabilities_host_get_cpu(host) : NULL;
     const gchar *arch = cpu ?
         gvir_config_capabilities_cpu_get_arch(cpu) : NULL;
+    gchar *arch_native;
 
     if (arch) {
-        return gvir_designer_domain_get_arch_normalized(arch);
+        arch_native = gvir_designer_domain_get_arch_normalized(arch);
     } else {
         struct utsname ut;
         uname(&ut);
-        return gvir_designer_domain_get_arch_normalized(ut.machine);
+        arch_native = gvir_designer_domain_get_arch_normalized(ut.machine);
     }
+    g_object_unref(G_OBJECT(cpu));
+    g_object_unref(G_OBJECT(host));
+
+    return arch_native;
 }
 
 
@@ -372,7 +377,7 @@ gvir_designer_domain_get_guest(GVirDesignerDomain *design,
     GList *tmp = guests;
     GVirConfigCapabilitiesGuest *ret = NULL;
 
-    while (tmp) {
+    while (tmp && !ret) {
         GVirConfigCapabilitiesGuest *guest =
             GVIR_CONFIG_CAPABILITIES_GUEST(tmp->data);
         GVirConfigCapabilitiesGuestArch *arch =
@@ -388,13 +393,13 @@ gvir_designer_domain_get_guest(GVirDesignerDomain *design,
              guestos == GVIR_CONFIG_DOMAIN_OS_TYPE_XEN ||
              guestos == GVIR_CONFIG_DOMAIN_OS_TYPE_UML)) {
             ret = g_object_ref(guest);
-            goto cleanup;
         }
+
+        g_object_unref(G_OBJECT(arch));
 
         tmp = tmp->next;
     }
 
-cleanup:
     g_list_foreach(guests, (GFunc)g_object_unref, NULL);
     g_list_free(guests);
     return ret;
@@ -561,7 +566,7 @@ gvir_designer_domain_setup_guest(GVirDesignerDomain *design,
     GVirConfigDomainOs *os = gvir_config_domain_os_new();
     GVirConfigCapabilitiesGuestArch *arch =
         gvir_config_capabilities_guest_get_arch(guest);
-    GVirConfigCapabilitiesGuestDomain *domain;
+    GVirConfigCapabilitiesGuestDomain *domain = NULL;
     gboolean ret = FALSE;
 
     if (!(domain = gvir_designer_domain_best_guest_domain(arch,
@@ -581,6 +586,9 @@ gvir_designer_domain_setup_guest(GVirDesignerDomain *design,
 
     ret = TRUE;
 cleanup:
+    if (domain != NULL)
+        g_object_unref(domain);
+    g_object_unref(arch);
     g_object_unref(os);
     return ret;
 }
