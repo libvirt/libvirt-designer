@@ -946,7 +946,7 @@ error:
  *
  * Add a new disk to the domain.
  *
- * Returns: (transfer none): the pointer to new disk.
+ * Returns: (transfer full): the pointer to new disk.
  * If something fails NULL is returned and @error is set.
  */
 GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *design,
@@ -976,7 +976,7 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *des
  *
  * Add given device as a new disk to the domain designer instance.
  *
- * Returns: (transfer none): the pointer to the new disk.
+ * Returns: (transfer full): the pointer to the new disk.
  * If something fails NULL is returned and @error is set.
  */
 GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *design,
@@ -1059,7 +1059,7 @@ cleanup:
  * Add new network interface card into @design. The interface is
  * of 'network' type with @network used as the source network.
  *
- * Returns: (transfer none): the pointer to the new interface.
+ * Returns: (transfer full): the pointer to the new interface.
  */
 GVirConfigDomainInterface *
 gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
