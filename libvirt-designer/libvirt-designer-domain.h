@@ -129,6 +129,11 @@ gboolean gvir_designer_domain_setup_resources(GVirDesignerDomain *design,
                                               GVirDesignerDomainResources req,
                                               GError **error);
 
+gboolean gvir_designer_domain_remove_all_drivers(GVirDesignerDomain *design,
+                                                 GError **error);
+gboolean gvir_designer_domain_add_driver(GVirDesignerDomain *design,
+                                         const char *driver_id,
+                                         GError **error);
 G_END_DECLS
 
 #endif /* __LIBVIRT_DESIGNER_DOMAIN_H__ */

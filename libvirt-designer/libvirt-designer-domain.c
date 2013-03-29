@@ -40,6 +40,8 @@ struct _GVirDesignerDomainPrivate
     OsinfoPlatform *platform;
 
     OsinfoDeployment *deployment;
+    OsinfoDeviceDriverList *drivers;
+
     /* next disk targets */
     unsigned int ide;
     unsigned int virtio;
@@ -59,6 +61,11 @@ static GQuark
 gvir_designer_domain_error_quark(void)
 {
     return g_quark_from_static_string("gvir-designer-domain");
+}
+
+static gboolean error_is_set(GError **error)
+{
+    return ((error != NULL) && (*error != NULL));
 }
 
 enum {
@@ -160,6 +167,8 @@ static void gvir_designer_domain_finalize(GObject *object)
         g_object_unref(priv->deployment);
     if (priv->osinfo_db)
         g_object_unref(priv->osinfo_db);
+    if (priv->drivers)
+        g_object_unref(priv->drivers);
 
     G_OBJECT_CLASS(gvir_designer_domain_parent_class)->finalize(object);
 }
@@ -235,6 +244,7 @@ static void gvir_designer_domain_init(GVirDesignerDomain *design)
 
     priv = design->priv = GVIR_DESIGNER_DOMAIN_GET_PRIVATE(design);
     priv->config = gvir_config_domain_new();
+    priv->drivers = osinfo_device_driverlist_new();
 }
 
 
@@ -1302,4 +1312,73 @@ cleanup:
     g_object_unref(G_OBJECT(os));
 
     return ret;
+}
+
+/**
+ * gvir_designer_domain_add_driver:
+ * @design: the domain designer instance
+ * @driver_id: OsInfo id of the driver to Add
+ * @error: return location for a #GError, or NULL
+ *
+ * Instructs libvirt-designer to assume that the driver identified by
+ * @driver_id is installed in the guest OS. This means that @design
+ * can use the device associated to @driver_id if needed.
+ *
+ * Returns: (transfer none): TRUE when successfully set, FALSE otherwise.
+ */
+gboolean gvir_designer_domain_add_driver(GVirDesignerDomain *design,
+                                         const char *driver_id,
+                                         GError **error)
+{
+    OsinfoEntity *driver;
+    OsinfoDeviceDriverList *drivers;
+    gboolean driver_added = FALSE;
+
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
+    g_return_val_if_fail(driver_id != NULL, FALSE);
+    g_return_val_if_fail(!error_is_set(error), FALSE);
+
+    if (design->priv->os == NULL) {
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0, "Unknown OS");
+        goto end;
+    }
+
+    drivers = osinfo_os_get_device_drivers(design->priv->os);
+    driver = osinfo_list_find_by_id(OSINFO_LIST(drivers), driver_id);
+    g_return_val_if_fail(OSINFO_IS_DEVICE_DRIVER(driver), FALSE);
+    if (driver == NULL) {
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "Unable to find driver %s in OS %s", driver_id,
+                    osinfo_entity_get_id(OSINFO_ENTITY(design->priv->os)));
+        goto end;
+    }
+
+    osinfo_list_add(OSINFO_LIST(design->priv->drivers), driver);
+    driver_added = TRUE;
+
+end:
+    return driver_added;
+}
+
+
+/**
+ * gvir_designer_domain_remove_all_drivers:
+ * @design: the domain designer instance
+ * @error: return location for a #GError, or NULL
+ *
+ * Removes all drivers used in @design.
+ *
+ * Returns: (transfer none): TRUE when successfully set, FALSE otherwise.
+ * @see_also gvir_designer_domain_add_driver()
+ */
+gboolean gvir_designer_domain_remove_all_drivers(GVirDesignerDomain *design,
+                                                 GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
+    g_return_val_if_fail(!error_is_set(error), FALSE);
+
+    g_object_unref(design->priv->drivers);
+    design->priv->drivers = NULL;
+
+    return TRUE;
 }
