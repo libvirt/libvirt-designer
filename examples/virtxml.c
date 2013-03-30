@@ -178,6 +178,7 @@ add_disk(gpointer data,
          gpointer user_data)
 {
     GVirDesignerDomain *domain = (GVirDesignerDomain *) user_data;
+    GVirConfigDomainDisk *disk;
     char *path = (char *) data;
     char *format = NULL;
     struct stat buf;
@@ -196,10 +197,12 @@ add_disk(gpointer data,
 
     if (!stat(path, &buf) &&
         !S_ISREG(buf.st_mode)) {
-        gvir_designer_domain_add_disk_device(domain, path, &error);
+        disk = gvir_designer_domain_add_disk_device(domain, path, &error);
     } else {
-        gvir_designer_domain_add_disk_file(domain, path, format, &error);
+        disk = gvir_designer_domain_add_disk_file(domain, path, format, &error);
     }
+    if (disk)
+        g_object_unref(G_OBJECT(disk));
 
     if (error) {
         print_error("%s", error->message);
@@ -493,7 +496,7 @@ main(int argc, char *argv[])
     static char *connect_uri = NULL;
     static char *resources_str = NULL;
     GVirDesignerDomainResources resources;
-    GOptionContext *context;
+    GOptionContext *context = NULL;
 
     static GOptionEntry entries[] =
     {
@@ -603,6 +606,8 @@ main(int argc, char *argv[])
     ret = EXIT_SUCCESS;
 
 cleanup:
+    if (context)
+        g_option_context_free(context);
     if (os)
         g_object_unref(G_OBJECT(os));
     if (platform)
