@@ -136,6 +136,7 @@ GVirConfigDomainGraphics *gvir_designer_domain_add_graphics(GVirDesignerDomain *
                                                             GVirDesignerDomainGraphics type,
                                                             GError **error);
 GVirConfigDomainSound *gvir_designer_domain_add_sound(GVirDesignerDomain *design, GError **error);
+GVirConfigDomainRedirdev *gvir_designer_domain_add_usb_redir(GVirDesignerDomain *design, GError **error);
 
 gboolean gvir_designer_domain_setup_resources(GVirDesignerDomain *design,
                                               GVirDesignerDomainResources req,

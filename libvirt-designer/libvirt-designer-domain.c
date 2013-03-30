@@ -587,6 +587,123 @@ gvir_designer_domain_add_graphics(GVirDesignerDomain *design,
 }
 
 
+static gboolean
+gvir_designer_domain_supports_usb(GVirDesignerDomain *design)
+{
+    GList *devices;
+    devices = gvir_designer_domain_get_device_by_type(design,
+                                                      GVIR_CONFIG_TYPE_DOMAIN_CONTROLLER_USB);
+    g_list_free_full(devices, g_object_unref);
+
+    return (devices != NULL);
+}
+
+
+static GVirConfigDomainControllerUsb *
+gvir_designer_domain_create_usb_controller(GVirDesignerDomain *design,
+                                           GVirConfigDomainControllerUsbModel model,
+                                           guint indx,
+                                           GVirConfigDomainControllerUsb *master,
+                                           guint start_port)
+{
+    GVirConfigDomainControllerUsb *controller;
+
+    controller = gvir_config_domain_controller_usb_new();
+    gvir_config_domain_controller_usb_set_model(controller, model);
+    gvir_config_domain_controller_set_index(GVIR_CONFIG_DOMAIN_CONTROLLER(controller), indx);
+    if (master)
+        gvir_config_domain_controller_usb_set_master(controller, master, start_port);
+
+    gvir_config_domain_add_device(design->priv->config,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(controller));
+
+    return controller;
+}
+
+
+static void
+gvir_designer_domain_add_usb_controllers(GVirDesignerDomain *design)
+{
+    GVirConfigDomainControllerUsb *master;
+    GVirConfigDomainControllerUsb *controller;
+
+    g_debug("Adding USB controllers");
+
+    master = gvir_designer_domain_create_usb_controller(design,
+                                                        GVIR_CONFIG_DOMAIN_CONTROLLER_USB_MODEL_ICH9_EHCI1,
+                                                        0,
+                                                        NULL,
+                                                        0);
+    controller = gvir_designer_domain_create_usb_controller(design,
+                                                            GVIR_CONFIG_DOMAIN_CONTROLLER_USB_MODEL_ICH9_UHCI1,
+                                                            0,
+                                                            master,
+                                                            0);
+    g_object_unref(G_OBJECT(controller));
+    controller = gvir_designer_domain_create_usb_controller(design,
+                                                            GVIR_CONFIG_DOMAIN_CONTROLLER_USB_MODEL_ICH9_UHCI2,
+                                                            0,
+                                                            master,
+                                                            2);
+    g_object_unref(G_OBJECT(controller));
+    controller = gvir_designer_domain_create_usb_controller(design,
+                                                            GVIR_CONFIG_DOMAIN_CONTROLLER_USB_MODEL_ICH9_UHCI3,
+                                                            0,
+                                                            master,
+                                                            4);
+    g_object_unref(G_OBJECT(controller));
+    g_object_unref(G_OBJECT(master));
+}
+
+
+/**
+ * gvir_designer_domain_add_usb_redir:
+ * @design: (transfer none): the domain designer instance
+ * @error: return location for a #GError, or NULL
+ *
+ * Add a new usb redirection channel into @design. This allows to redirect
+ * an USB device from the SPICE client to the guest. One USB device
+ * can be redirected per redirection channel, this function can
+ * be called multiple times if you need to redirect multiple devices
+ * simultaneously. An USB2 EHCI controller and USB1 UHCI controllers
+ * will be automatically added to @design if @design does not have
+ * USB controllers yet.
+ *
+ * Returns: (transfer full): the pointer to the new USB redir channel
+ */
+GVirConfigDomainRedirdev *
+gvir_designer_domain_add_usb_redir(GVirDesignerDomain *design, GError **error)
+{
+    /* FIXME: check if OS/hypervisor support USB
+     *        check if SPICE is being used
+     */
+    GVirConfigDomainRedirdev *redirdev;
+    GVirConfigDomainChardevSourceSpiceVmc *vmc;
+
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+    g_return_val_if_fail(!error_is_set(error), NULL);
+
+    redirdev = gvir_config_domain_redirdev_new();
+    gvir_config_domain_redirdev_set_bus(redirdev,
+                                        GVIR_CONFIG_DOMAIN_REDIRDEV_BUS_USB);
+    vmc = gvir_config_domain_chardev_source_spicevmc_new();
+    gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(redirdev),
+                                          GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(vmc));
+    g_object_unref(G_OBJECT(vmc));
+
+    gvir_config_domain_add_device(design->priv->config,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(redirdev));
+
+    if (!gvir_designer_domain_supports_usb(design)) {
+        gvir_designer_domain_add_usb_controllers(design);
+    } else {
+        g_debug("USB controllers are already present");
+    }
+
+    return redirdev;
+}
+
+
 static void gvir_designer_domain_add_power_management(GVirDesignerDomain *design)
 {
     GVirConfigDomainPowerManagement *pm;

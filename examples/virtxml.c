@@ -565,9 +565,11 @@ main(int argc, char *argv[])
     static char *connect_uri = NULL;
     static char *graphics_str = NULL;
     GVirDesignerDomainGraphics graphics;
+    static gboolean enable_usb;
     static char *resources_str = NULL;
     GVirDesignerDomainResources resources;
     GOptionContext *context = NULL;
+    unsigned int i;
 
     static GOptionEntry entries[] =
     {
@@ -593,6 +595,8 @@ main(int argc, char *argv[])
             "add interface with NETWORK source. Possible ARGs: mac, link={up,down}", "NETWORK[,ARG=VAL]"},
         {"graphics", 'g', 0, G_OPTION_ARG_STRING, &graphics_str,
             "add graphical output to the VM. Possible values are 'spice' or 'vnc'", "GRAPHICS"},
+        {"usb", 'u', 0, G_OPTION_ARG_NONE, &enable_usb,
+            "add USB redirection to the VM.", NULL},
         {"resources", 'r', 0, G_OPTION_ARG_STRING, &resources_str,
             "Set minimal or recommended values for cpu count and RAM amount", "{minimal|recommended}"},
         {NULL}
@@ -645,6 +649,14 @@ main(int argc, char *argv[])
 
     gvir_designer_domain_setup_machine(domain, &error);
     CHECK_ERROR;
+
+    if (enable_usb) {
+        for (i = 0; i < 4; i++) {
+            /* 4 USB redir channels allow to redirect 4 USB devices at once */
+            g_object_unref(gvir_designer_domain_add_usb_redir(domain, &error));
+            CHECK_ERROR;
+        }
+    }
 
     g_object_unref(gvir_designer_domain_add_sound(domain, &error));
     CHECK_ERROR;
@@ -803,6 +815,9 @@ I<link>={up|down}
 Add a graphics device of type I<GRAPHICS>. Valid values are I<spice>
 or I<vnc>.
 
+=item -u
+
+Add USB controllers and setup USB redirection in the VM configuration.
 
 =item -r RESOURCE, --resources=RESOURCES
 
