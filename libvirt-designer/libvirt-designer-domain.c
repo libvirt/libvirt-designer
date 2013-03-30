@@ -841,6 +841,7 @@ gvir_designer_domain_next_disk_target(GVirDesignerDomain *design,
 static GVirConfigDomainDisk *
 gvir_designer_domain_add_disk_full(GVirDesignerDomain *design,
                                    GVirConfigDomainDiskType type,
+                                   GVirConfigDomainDiskGuestDeviceType guest_type,
                                    const char *path,
                                    const char *format,
                                    gchar *target,
@@ -960,6 +961,7 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *des
 
     ret = gvir_designer_domain_add_disk_full(design,
                                              GVIR_CONFIG_DOMAIN_DISK_FILE,
+                                             GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_DISK,
                                              filepath,
                                              format,
                                              NULL,
@@ -989,12 +991,137 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *d
 
     ret = gvir_designer_domain_add_disk_full(design,
                                              GVIR_CONFIG_DOMAIN_DISK_BLOCK,
+                                             GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_DISK,
                                              devpath,
                                              "raw",
                                              NULL,
                                              error);
     return ret;
 }
+
+/**
+ * gvir_designer_domain_add_cdrom_file:
+ * @design: (transfer none): the domain designer instance
+ * @filepath: (transfer none): the path to a file
+ * @format: (transfer none): file format
+ * @error: return location for a #GError, or NULL
+ *
+ * Add a new disk to the domain.
+ *
+ * Returns: (transfer full): the pointer to new cdrom.
+ * If something fails NULL is returned and @error is set.
+ */
+GVirConfigDomainDisk *gvir_designer_domain_add_cdrom_file(GVirDesignerDomain *design,
+                                                          const char *filepath,
+                                                          const char *format,
+                                                          GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+
+    GVirConfigDomainDisk *ret = NULL;
+
+    ret = gvir_designer_domain_add_disk_full(design,
+                                             GVIR_CONFIG_DOMAIN_DISK_FILE,
+                                             GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_CDROM,
+                                             filepath,
+                                             format,
+                                             NULL,
+                                             error);
+    return ret;
+}
+
+
+/**
+ * gvir_designer_domain_add_cdrom_device:
+ * @design: (transfer none): the domain designer instance
+ * @devpath: (transfer none): path to the device
+ * @error: return location for a #GError, or NULL
+ *
+ * Add given device as a new cdrom to the domain designer instance.
+ *
+ * Returns: (transfer full): the pointer to the new cdrom.
+ * If something fails NULL is returned and @error is set.
+ */
+GVirConfigDomainDisk *gvir_designer_domain_add_cdrom_device(GVirDesignerDomain *design,
+                                                            const char *devpath,
+                                                            GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+
+    GVirConfigDomainDisk *ret = NULL;
+
+    ret = gvir_designer_domain_add_disk_full(design,
+                                             GVIR_CONFIG_DOMAIN_DISK_BLOCK,
+                                             GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_CDROM,
+                                             devpath,
+                                             "raw",
+                                             NULL,
+                                             error);
+    return ret;
+}
+
+
+/**
+ * gvir_designer_domain_add_floppy_file:
+ * @design: (transfer none): the domain designer instance
+ * @filepath: (transfer none): the path to a file
+ * @format: (transfer none): file format
+ * @error: return location for a #GError, or NULL
+ *
+ * Add a new disk to the domain.
+ *
+ * Returns: (transfer full): the pointer to new floppy.
+ * If something fails NULL is returned and @error is set.
+ */
+GVirConfigDomainDisk *gvir_designer_domain_add_floppy_file(GVirDesignerDomain *design,
+                                                           const char *filepath,
+                                                           const char *format,
+                                                           GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+
+    GVirConfigDomainDisk *ret = NULL;
+
+    ret = gvir_designer_domain_add_disk_full(design,
+                                             GVIR_CONFIG_DOMAIN_DISK_FILE,
+                                             GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_FLOPPY,
+                                             filepath,
+                                             format,
+                                             NULL,
+                                             error);
+    return ret;
+}
+
+
+/**
+ * gvir_designer_domain_add_floppy_device:
+ * @design: (transfer none): the domain designer instance
+ * @devpath: (transfer none): path to the device
+ * @error: return location for a #GError, or NULL
+ *
+ * Add given device as a new floppy to the domain designer instance.
+ *
+ * Returns: (transfer full): the pointer to the new floppy.
+ * If something fails NULL is returned and @error is set.
+ */
+GVirConfigDomainDisk *gvir_designer_domain_add_floppy_device(GVirDesignerDomain *design,
+                                                             const char *devpath,
+                                                             GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+
+    GVirConfigDomainDisk *ret = NULL;
+
+    ret = gvir_designer_domain_add_disk_full(design,
+                                             GVIR_CONFIG_DOMAIN_DISK_BLOCK,
+                                             GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_FLOPPY,
+                                             devpath,
+                                             "raw",
+                                             NULL,
+                                             error);
+    return ret;
+}
+
 
 
 static const gchar *

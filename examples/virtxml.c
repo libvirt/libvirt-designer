@@ -33,7 +33,9 @@
 #include <unistd.h>
 #include <glib/gprintf.h>
 
+GList *cdrom_str_list = NULL;
 GList *disk_str_list = NULL;
+GList *floppy_str_list = NULL;
 GList *iface_str_list = NULL;
 OsinfoDb *db = NULL;
 
@@ -173,16 +175,17 @@ cleanup:
     return TRUE;
 }
 
+
 static void
-add_disk(gpointer data,
-         gpointer user_data)
+add_disk_generic(GVirDesignerDomain *domain,
+                 const char *path,
+                 GVirConfigDomainDiskGuestDeviceType type)
 {
-    GVirDesignerDomain *domain = (GVirDesignerDomain *) user_data;
     GVirConfigDomainDisk *disk;
-    char *path = (char *) data;
     char *format = NULL;
     struct stat buf;
     GError *error = NULL;
+    gboolean is_device;
 
     format = strchr(path, ',');
     if (format) {
@@ -195,12 +198,30 @@ add_disk(gpointer data,
         exit(EXIT_FAILURE);
     }
 
-    if (!stat(path, &buf) &&
-        !S_ISREG(buf.st_mode)) {
-        disk = gvir_designer_domain_add_disk_device(domain, path, &error);
-    } else {
-        disk = gvir_designer_domain_add_disk_file(domain, path, format, &error);
+    is_device = (!stat(path, &buf) && !S_ISREG(buf.st_mode));
+    switch(type) {
+        case GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_CDROM:
+            if (is_device)
+                disk = gvir_designer_domain_add_cdrom_device(domain, path, &error);
+            else
+                disk = gvir_designer_domain_add_cdrom_file(domain, path, format, &error);
+            break;
+        case GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_DISK:
+            if (is_device)
+                disk = gvir_designer_domain_add_disk_device(domain, path, &error);
+            else
+                disk = gvir_designer_domain_add_disk_file(domain, path, format, &error);
+            break;
+        case GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_FLOPPY:
+            if (is_device)
+                disk = gvir_designer_domain_add_floppy_device(domain, path, &error);
+            else
+                disk = gvir_designer_domain_add_floppy_file(domain, path, format, &error);
+            break;
+        default:
+            g_return_if_reached();
     }
+
     if (disk)
         g_object_unref(G_OBJECT(disk));
 
@@ -209,6 +230,42 @@ add_disk(gpointer data,
         exit(EXIT_FAILURE);
     }
 }
+
+
+static void add_cdrom(gpointer data, gpointer user_data)
+{
+    add_disk_generic(GVIR_DESIGNER_DOMAIN(user_data),
+                     (const char *)data,
+                     GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_CDROM);
+}
+
+
+static void add_disk(gpointer data, gpointer user_data)
+{
+    add_disk_generic(GVIR_DESIGNER_DOMAIN(user_data),
+                     (const char *)data,
+                     GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_DISK);
+}
+
+
+static void add_floppy(gpointer data, gpointer user_data)
+{
+    add_disk_generic(GVIR_DESIGNER_DOMAIN(user_data),
+                     (const char *)data,
+                     GVIR_CONFIG_DOMAIN_DISK_GUEST_DEVICE_FLOPPY);
+}
+
+
+static gboolean
+add_cdrom_str(const gchar *option_name,
+              const gchar *value,
+              gpointer data,
+              GError **error)
+{
+    cdrom_str_list = g_list_append(cdrom_str_list, g_strdup(value));
+    return TRUE;
+}
+
 
 static gboolean
 add_disk_str(const gchar *option_name,
@@ -219,6 +276,18 @@ add_disk_str(const gchar *option_name,
     disk_str_list = g_list_append(disk_str_list, g_strdup(value));
     return TRUE;
 }
+
+
+static gboolean
+add_floppy_str(const gchar *option_name,
+               const gchar *value,
+               gpointer data,
+               GError **error)
+{
+    floppy_str_list = g_list_append(floppy_str_list, g_strdup(value));
+    return TRUE;
+}
+
 
 static void
 add_iface(gpointer data,
@@ -357,7 +426,7 @@ cleanup:
 }
 
 static OsinfoOs *
-guess_os_from_disk(GList *disk_list)
+guess_os_from_cdrom(GList *disk_list)
 {
     OsinfoOs *ret = NULL;
     GList *list_it = NULL;
@@ -512,8 +581,12 @@ main(int argc, char *argv[])
             "set hypervisor under which domain will be running", "PLATFORM"},
         {"architecture", 'a', 0, G_OPTION_ARG_STRING, &arch_str,
             "set domain architecture", "ARCH"},
+        {"cdrom", 'C', 0, G_OPTION_ARG_CALLBACK, add_cdrom_str,
+            "add CDROM to domain with PATH being source and FORMAT its format", "PATH[,FORMAT]"},
         {"disk", 'd', 0, G_OPTION_ARG_CALLBACK, add_disk_str,
             "add disk to domain with PATH being source and FORMAT its format", "PATH[,FORMAT]"},
+        {"floppy", 'F', 0, G_OPTION_ARG_CALLBACK, add_floppy_str,
+            "add floppy to domain with PATH being source and FORMAT its format", "PATH[,FORMAT]"},
         {"interface", 'i', 0, G_OPTION_ARG_CALLBACK, add_iface_str,
             "add interface with NETWORK source. Possible ARGs: mac, link={up,down}", "NETWORK[,ARG=VAL]"},
         {"resources", 'r', 0, G_OPTION_ARG_STRING, &resources_str,
@@ -543,7 +616,7 @@ main(int argc, char *argv[])
         if (!os)
             os = find_os_by_short_id(os_str);
     } else {
-        os = guess_os_from_disk(disk_str_list);
+        os = guess_os_from_cdrom(cdrom_str_list);
     }
 
     if (!os) {
@@ -593,7 +666,11 @@ main(int argc, char *argv[])
                                              NULL);
     }
 
+    g_list_foreach(cdrom_str_list, add_cdrom, domain);
+
     g_list_foreach(disk_str_list, add_disk, domain);
+
+    g_list_foreach(floppy_str_list, add_floppy, domain);
 
     g_list_foreach(iface_str_list, add_iface, domain);
 
@@ -683,6 +760,11 @@ is and ID which can be obtained via I<--list-platform>.
 
 Set domain's architecture
 
+=item -C PATH[,FORMAT] --cdrom=PATH[,FORMAT]
+
+Add I<PATH> as a CDROM to the domain. To specify its format (e.g. raw,
+qcow2, phy) use I<FORMAT>.
+
 =item -d PATH[,FORMAT] --disk=PATH[,FORMAT]
 
 Add I<PATH> as a disk to the domain. To specify its format (e.g. raw,
@@ -712,12 +794,12 @@ platform. Usually, the platform is guessed from the connection URI.
 Domain with Fedora 17 from locally stored ISO and one NIC with mac
 00:11:22:33:44:55 and link set down:
 
-  # virtxml -d Fedora-17-x86_64-Live-KDE.iso \
+  # virtxml -C Fedora-17-x86_64-Live-KDE.iso \
             -i default,mac=00:11:22:33:44:55,link=down
 
 To add multiple devices just use appropriate argument multiple times:
 
-  # virtxml -d /tmp/Fedora-17-x86_64-Live-KDE.iso,raw \
+  # virtxml -d /tmp/home.img,qcow2 \
             -d /var/lib/libvirt/images/f17.img,qcow2 \
             -i default,mac=00:11:22:33:44:55,link=down \
             -i blue_network \

@@ -99,6 +99,13 @@ gboolean gvir_designer_domain_setup_container_full(GVirDesignerDomain *design,
                                                    const char *arch,
                                                    GError **error);
 
+GVirConfigDomainDisk *gvir_designer_domain_add_cdrom_file(GVirDesignerDomain *design,
+                                                         const char *filepath,
+                                                         const char *format,
+                                                         GError **error);
+GVirConfigDomainDisk *gvir_designer_domain_add_cdrom_device(GVirDesignerDomain *design,
+                                                           const char *devpath,
+                                                           GError **error);
 GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *design,
                                                          const char *filepath,
                                                          const char *format,
@@ -106,6 +113,13 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *des
 GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *design,
                                                            const char *devpath,
                                                            GError **error);
+GVirConfigDomainDisk *gvir_designer_domain_add_floppy_file(GVirDesignerDomain *design,
+                                                           const char *filepath,
+                                                           const char *format,
+                                                           GError **error);
+GVirConfigDomainDisk *gvir_designer_domain_add_floppy_device(GVirDesignerDomain *design,
+                                                             const char *devpath,
+                                                             GError **error);
 
 GVirConfigDomainInterface *gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
                                                                       const char *network,
