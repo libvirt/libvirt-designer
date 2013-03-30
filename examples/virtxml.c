@@ -666,6 +666,9 @@ main(int argc, char *argv[])
         CHECK_ERROR;
     }
 
+    g_object_unref(gvir_designer_domain_add_video(domain, &error));
+    CHECK_ERROR;
+
     g_object_unref(gvir_designer_domain_add_sound(domain, &error));
     CHECK_ERROR;
 

@@ -1160,6 +1160,7 @@ gvir_designer_domain_setup_guest(GVirDesignerDomain *design,
     gvir_designer_domain_add_input(design);
 
     ret = TRUE;
+
 cleanup:
     if (domain != NULL)
         g_object_unref(domain);
@@ -1908,6 +1909,177 @@ gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
                                                   error);
 
     return ret;
+}
+
+static GVirConfigDomainVideoModel
+gvir_designer_domain_video_model_str_to_enum(const char *model_str,
+                                             GError **error)
+{
+    GVirConfigDomainVideoModel model;
+
+    if (g_str_equal(model_str, "vga")) {
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_VGA;
+    } else if (g_str_equal(model_str, "cirrus")) {
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_CIRRUS;
+    } else if (g_str_equal(model_str, "vmvga")) {
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_VMVGA;
+    } else if (g_str_equal(model_str, "xen")) {
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_XEN;
+    } else if (g_str_equal(model_str, "vbox")) {
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_VBOX;
+    } else if (g_str_equal(model_str, "qxl")) {
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_QXL;
+    } else {
+        g_debug("unsupported video model type '%s'", model_str);
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "unsupported video model type '%s'", model_str);
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_VGA;
+    }
+
+    return model;
+}
+
+/* FIXME: belongs in platform descriptions, maybe useful as a last resort */
+static GVirConfigDomainVideoModel
+gvir_designer_domain_video_model_from_virt_type(GVirDesignerDomain *design)
+{
+    GVirConfigDomainVirtType virt_type;
+    GVirConfigDomainVideoModel model;
+
+    virt_type = gvir_config_domain_get_virt_type(design->priv->config);
+    switch (virt_type) {
+    case GVIR_CONFIG_DOMAIN_VIRT_QEMU:
+    case GVIR_CONFIG_DOMAIN_VIRT_KQEMU:
+    case GVIR_CONFIG_DOMAIN_VIRT_KVM:
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_QXL;
+        break;
+    case GVIR_CONFIG_DOMAIN_VIRT_XEN:
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_XEN;
+        break;
+    case GVIR_CONFIG_DOMAIN_VIRT_VMWARE:
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_VMVGA;
+        break;
+    case GVIR_CONFIG_DOMAIN_VIRT_VBOX:
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_VBOX;
+        break;
+    case GVIR_CONFIG_DOMAIN_VIRT_LXC:
+    case GVIR_CONFIG_DOMAIN_VIRT_UML:
+    case GVIR_CONFIG_DOMAIN_VIRT_OPENVZ:
+    case GVIR_CONFIG_DOMAIN_VIRT_VSERVER:
+    case GVIR_CONFIG_DOMAIN_VIRT_LDOM:
+    case GVIR_CONFIG_DOMAIN_VIRT_TEST:
+    case GVIR_CONFIG_DOMAIN_VIRT_HYPERV:
+    case GVIR_CONFIG_DOMAIN_VIRT_ONE:
+    case GVIR_CONFIG_DOMAIN_VIRT_PHYP:
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_VGA;
+        break;
+    default:
+        g_warn_if_reached();
+        model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_VGA;
+        break;
+    }
+
+    return model;
+}
+
+static const gchar *
+gvir_designer_domain_get_preferred_video_model(GVirDesignerDomain *design,
+                                               GError **error)
+{
+    const gchar *ret = NULL;
+    OsinfoDeviceLink *dev_link = NULL;
+    OsinfoDevice *dev;
+
+    dev_link = gvir_designer_domain_get_preferred_device(design, "video", error);
+    if (!dev_link)
+        goto cleanup;
+
+    dev = osinfo_devicelink_get_target(dev_link);
+    if (dev)
+        ret = osinfo_device_get_name(dev);
+
+cleanup:
+    if (dev_link)
+        g_object_unref(dev_link);
+    return ret;
+}
+
+static GVirConfigDomainVideoModel
+gvir_designer_domain_get_fallback_video_model(GVirDesignerDomain *design)
+{
+    OsinfoDeviceList *supported_devices = NULL;
+    OsinfoFilter *filter = NULL;
+    OsinfoDevice *device = NULL;
+    const char *model_str;
+    GVirConfigDomainVideoModel model;
+    GError *error = NULL;
+
+    model = GVIR_CONFIG_DOMAIN_VIDEO_MODEL_VGA;
+
+    filter = osinfo_filter_new();
+    osinfo_filter_add_constraint(filter, OSINFO_DEVICE_PROP_CLASS, "video");
+    supported_devices = gvir_designer_domain_get_supported_devices(design, filter);
+    if (supported_devices == NULL || osinfo_list_get_length(OSINFO_LIST(supported_devices)) == 0)
+        goto fallback;
+
+    device = OSINFO_DEVICE(osinfo_list_get_nth(OSINFO_LIST(supported_devices), 0));
+    model_str = osinfo_device_get_name(device);
+    model = gvir_designer_domain_video_model_str_to_enum(model_str,
+                                                         &error);
+    if (error != NULL) {
+        g_clear_error(&error);
+        goto fallback;
+    }
+    goto end;
+
+fallback:
+    model = gvir_designer_domain_video_model_from_virt_type(design);
+
+end:
+    if (filter != NULL)
+        g_object_unref(G_OBJECT(filter));
+    if (supported_devices != NULL)
+        g_object_unref(G_OBJECT(supported_devices));
+
+    return model;
+}
+
+/**
+ * gvir_designer_domain_add_video:
+ * @design: (transfer none): the domain designer instance
+ * @error: return location for a #GError, or NULL
+ *
+ * Add a new video device into @design.
+ *
+ * Returns: (transfer full): the pointer to the new video device.
+ */
+GVirConfigDomainVideo *
+gvir_designer_domain_add_video(GVirDesignerDomain *design, GError **error)
+{
+    GVirConfigDomainVideo *video;
+    const gchar *model_str = NULL;
+    GVirConfigDomainVideoModel model;
+
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+    g_return_val_if_fail(!error_is_set(error), NULL);
+
+    model_str = gvir_designer_domain_get_preferred_video_model(design, NULL);
+    if (model_str != NULL) {
+        model = gvir_designer_domain_video_model_str_to_enum(model_str, error);
+        if (error_is_set(error)) {
+            g_clear_error(error);
+            model = gvir_designer_domain_get_fallback_video_model(design);
+        }
+    } else {
+        model = gvir_designer_domain_get_fallback_video_model(design);
+    }
+
+    video = gvir_config_domain_video_new();
+    gvir_config_domain_video_set_model(video, model);
+    gvir_config_domain_add_device(design->priv->config,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(video));
+
+    return video;
 }
 
 
