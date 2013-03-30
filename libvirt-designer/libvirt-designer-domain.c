@@ -70,6 +70,7 @@ static gboolean error_is_set(GError **error)
 }
 
 static const char GVIR_DESIGNER_SPICE_CHANNEL_NAME[] = "com.redhat.spice.0";
+static const char GVIR_DESIGNER_SPICE_CHANNEL_DEVICE_ID[] = "http://pciids.sourceforge.net/v2.2/pci.ids/1af4/1003";
 static const char GVIR_DESIGNER_VIRTIO_BLOCK_DEVICE_ID[] = "http://pciids.sourceforge.net/v2.2/pci.ids/1af4/1001";
 
 enum {
@@ -410,11 +411,47 @@ gvir_designer_domain_has_spice_channel(GVirDesignerDomain *design)
 }
 
 
-static void gvir_designer_domain_add_spice_channel(GVirDesignerDomain *design)
+static gboolean
+gvir_designer_domain_supports_spice_channel(GVirDesignerDomain *design)
 {
-    /* FIXME: error out if there is no support for the vioserial device */
+    OsinfoDeviceList *devices;
+    OsinfoFilter *filter;
+    gboolean vioserial_found = FALSE;
+
+    filter = osinfo_filter_new();
+    osinfo_filter_add_constraint(filter,
+                                 OSINFO_ENTITY_PROP_ID,
+                                 GVIR_DESIGNER_SPICE_CHANNEL_DEVICE_ID);
+    devices = gvir_designer_domain_get_supported_devices(design, filter);
+    if (devices) {
+        /* We only expect 0 or 1 virtio serial devices in that device list,
+         * so warn if we get more than 1
+         */
+        g_warn_if_fail(osinfo_list_get_length(OSINFO_LIST(devices)) <= 1);
+        if (osinfo_list_get_length(OSINFO_LIST(devices)) >= 1)
+            vioserial_found = TRUE;
+        g_object_unref(G_OBJECT(devices));
+    }
+    if (filter)
+        g_object_unref(G_OBJECT(filter));
+
+    return vioserial_found;
+}
+
+
+static gboolean gvir_designer_domain_add_spice_channel(GVirDesignerDomain *design,
+                                                       GError **error)
+{
     GVirConfigDomainChannel *channel;
     GVirConfigDomainChardevSourceSpiceVmc *vmc;
+
+    if (!gvir_designer_domain_supports_spice_channel(design)) {
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "OS and/or hypervisor don't support virtio-serial"
+                    " which is required by the SPICE channel");
+        g_debug("SPICE channel not supported");
+        return FALSE;
+    }
 
     channel = gvir_config_domain_channel_new();
     gvir_config_domain_channel_set_target_type(channel,
@@ -429,6 +466,8 @@ static void gvir_designer_domain_add_spice_channel(GVirDesignerDomain *design)
     gvir_config_domain_add_device(design->priv->config,
                                   GVIR_CONFIG_DOMAIN_DEVICE(channel));
     g_object_unref(G_OBJECT(channel));
+
+    return TRUE;
 }
 
 
@@ -516,7 +555,11 @@ gvir_designer_domain_add_graphics(GVirDesignerDomain *design,
                                                                 GVIR_CONFIG_DOMAIN_GRAPHICS_SPICE_IMAGE_COMPRESSION_OFF);
         graphics = GVIR_CONFIG_DOMAIN_GRAPHICS(spice);
         if (!gvir_designer_domain_has_spice_channel(design))
-            gvir_designer_domain_add_spice_channel(design);
+            gvir_designer_domain_add_spice_channel(design, error);
+        if (error_is_set(error)) {
+            g_object_unref(graphics);
+            return NULL;
+        }
 
         break;
     }
