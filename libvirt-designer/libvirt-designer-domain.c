@@ -237,6 +237,80 @@ static void gvir_designer_domain_class_init(GVirDesignerDomainClass *klass)
 }
 
 
+static OsinfoDeviceList *
+gvir_designer_domain_get_devices_from_drivers(GVirDesignerDomain *design,
+                                              OsinfoFilter *filter)
+{
+    GVirDesignerDomainPrivate *priv = design->priv;
+    OsinfoDeviceList *devices;
+    unsigned int i;
+
+
+    devices = osinfo_devicelist_new();
+
+    for (i = 0; i < osinfo_list_get_length(OSINFO_LIST(priv->drivers)); i++) {
+        OsinfoDeviceDriver *driver;
+        OsinfoDeviceList *driver_devices;
+
+        driver = OSINFO_DEVICE_DRIVER(osinfo_list_get_nth(OSINFO_LIST(priv->drivers), i));
+        driver_devices = osinfo_device_driver_get_devices(driver);
+        osinfo_list_add_filtered(OSINFO_LIST(devices),
+                                 OSINFO_LIST(driver_devices),
+                                 filter);
+    }
+
+    return devices;
+}
+
+
+/* Gets the list of devices matching filter that are natively supported
+ * by (OS) and (platform), or that are supported by (OS with a driver) and
+ * (platform).
+ * Drivers are added through gvir_designer_domain_add_driver()
+ */
+static OsinfoDeviceList *
+gvir_designer_domain_get_supported_devices(GVirDesignerDomain *design,
+                                           OsinfoFilter *filter)
+{
+    GVirDesignerDomainPrivate *priv = design->priv;
+    OsinfoDeviceList *os_devices;
+    OsinfoDeviceList *platform_devices;
+    OsinfoDeviceList *driver_devices;
+    OsinfoDeviceList *devices;
+
+    os_devices = osinfo_os_get_all_devices(priv->os, filter);
+    platform_devices = osinfo_platform_get_all_devices(priv->platform, filter);
+    driver_devices = gvir_designer_domain_get_devices_from_drivers(design, filter);
+
+    devices = osinfo_devicelist_new();
+
+    if (platform_devices == NULL)
+        goto end;
+
+    if (os_devices != NULL)
+        osinfo_list_add_intersection(OSINFO_LIST(devices),
+                                     OSINFO_LIST(os_devices),
+                                     OSINFO_LIST(platform_devices));
+
+    if (driver_devices != NULL)
+        osinfo_list_add_intersection(OSINFO_LIST(devices),
+                                     OSINFO_LIST(driver_devices),
+                                     OSINFO_LIST(platform_devices));
+
+end:
+    if (os_devices != NULL)
+        g_object_unref(os_devices);
+
+    if (platform_devices != NULL)
+        g_object_unref(platform_devices);
+
+    if (driver_devices != NULL)
+        g_object_unref(driver_devices);
+
+    return devices;
+}
+
+
 static void gvir_designer_domain_init(GVirDesignerDomain *design)
 {
     GVirDesignerDomainPrivate *priv;
@@ -724,13 +798,15 @@ cleanup:
 static GList *
 gvir_designer_domain_get_supported_disk_bus_types(GVirDesignerDomain *design)
 {
-    GVirDesignerDomainPrivate *priv = design->priv;
     OsinfoDeviceList *dev_list;
+    OsinfoFilter *filter = NULL;
     GHashTable *bus_hash = g_hash_table_new(g_str_hash, g_str_equal);
     GList *ret = NULL;
     GList *devs = NULL, *dev_iterator;
 
-    dev_list = osinfo_os_get_devices_by_property(priv->os, "class", "block", TRUE);
+    filter = osinfo_filter_new();
+    osinfo_filter_add_constraint(filter, OSINFO_DEVICE_PROP_CLASS, "block");
+    dev_list = gvir_designer_domain_get_supported_devices(design, filter);
     if (!dev_list)
         goto cleanup;
 
@@ -750,6 +826,8 @@ cleanup:
     g_list_free(devs);
     if (dev_list != NULL)
         g_object_unref(G_OBJECT(dev_list));
+    if (filter != NULL)
+        g_object_unref(G_OBJECT(filter));
     g_hash_table_destroy(bus_hash);
     return ret;
 }
