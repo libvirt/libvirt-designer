@@ -69,6 +69,7 @@ static gboolean error_is_set(GError **error)
     return ((error != NULL) && (*error != NULL));
 }
 
+static const char GVIR_DESIGNER_SPICE_CHANNEL_NAME[] = "com.redhat.spice.0";
 static const char GVIR_DESIGNER_VIRTIO_BLOCK_DEVICE_ID[] = "http://pciids.sourceforge.net/v2.2/pci.ids/1af4/1001";
 
 enum {
@@ -314,6 +315,29 @@ end:
 }
 
 
+static GList *
+gvir_designer_domain_get_device_by_type(GVirDesignerDomain *design, GType type)
+{
+    GList *devices;
+    GList *it;
+    GList *matched_devices = NULL;
+
+    devices = gvir_config_domain_get_devices(design->priv->config);
+    for (it = devices; it != NULL; it = it->next) {
+        GType device_type = G_OBJECT_TYPE(it->data);
+
+        if (g_type_is_a(device_type, type)) {
+            matched_devices = g_list_prepend(matched_devices,
+                                             g_object_ref(G_OBJECT(it->data)));
+        }
+
+    }
+    g_list_free_full(devices, g_object_unref);
+
+    return g_list_reverse(matched_devices);
+}
+
+
 static void gvir_designer_domain_add_clock(GVirDesignerDomain *design)
 {
     GVirConfigDomainClock *clock;
@@ -346,6 +370,65 @@ static void gvir_designer_domain_add_clock(GVirDesignerDomain *design)
 
     gvir_config_domain_set_clock(design->priv->config, clock);
     g_object_unref(G_OBJECT(clock));
+}
+
+
+static gboolean
+gvir_designer_domain_has_spice_channel(GVirDesignerDomain *design)
+{
+    GList *devices;
+    GList *it;
+    gboolean has_spice = FALSE;
+
+    devices = gvir_designer_domain_get_device_by_type(design,
+                                                      GVIR_CONFIG_TYPE_DOMAIN_CHANNEL);
+    for (it = devices; it != NULL; it = it->next) {
+        GVirConfigDomainChannel *channel;
+        const char *target_name;
+        channel = GVIR_CONFIG_DOMAIN_CHANNEL(it->data);
+        target_name = gvir_config_domain_channel_get_target_name(channel);
+        if (g_strcmp0(target_name, GVIR_DESIGNER_SPICE_CHANNEL_NAME) == 0) {
+            /* FIXME could do more sanity checks (check if the channel
+             * source has the 'spicevmc' type)
+             */
+            GVirConfigDomainChannelTargetType target_type;
+            target_type = gvir_config_domain_channel_get_target_type(channel);
+            if (target_type == GVIR_CONFIG_DOMAIN_CHANNEL_TARGET_VIRTIO) {
+                has_spice = TRUE;
+            } else {
+                g_critical("Inconsistent SPICE channel, target type is wrong (%d)",
+                           target_type);
+                has_spice = FALSE;
+            }
+
+            break;
+        }
+    }
+    g_list_free_full(devices, g_object_unref);
+
+    return has_spice;
+}
+
+
+static void gvir_designer_domain_add_spice_channel(GVirDesignerDomain *design)
+{
+    /* FIXME: error out if there is no support for the vioserial device */
+    GVirConfigDomainChannel *channel;
+    GVirConfigDomainChardevSourceSpiceVmc *vmc;
+
+    channel = gvir_config_domain_channel_new();
+    gvir_config_domain_channel_set_target_type(channel,
+                                               GVIR_CONFIG_DOMAIN_CHANNEL_TARGET_VIRTIO);
+    gvir_config_domain_channel_set_target_name(channel,
+                                               GVIR_DESIGNER_SPICE_CHANNEL_NAME);
+    vmc = gvir_config_domain_chardev_source_spicevmc_new();
+    gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(channel),
+                                          GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(vmc));
+    g_object_unref(G_OBJECT(vmc));
+
+    gvir_config_domain_add_device(design->priv->config,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(channel));
+    g_object_unref(G_OBJECT(channel));
 }
 
 
@@ -432,6 +515,8 @@ gvir_designer_domain_add_graphics(GVirDesignerDomain *design,
         gvir_config_domain_graphics_spice_set_image_compression(spice,
                                                                 GVIR_CONFIG_DOMAIN_GRAPHICS_SPICE_IMAGE_COMPRESSION_OFF);
         graphics = GVIR_CONFIG_DOMAIN_GRAPHICS(spice);
+        if (!gvir_designer_domain_has_spice_channel(design))
+            gvir_designer_domain_add_spice_channel(design);
 
         break;
     }
