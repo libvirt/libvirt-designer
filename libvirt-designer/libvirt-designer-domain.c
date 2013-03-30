@@ -704,6 +704,42 @@ gvir_designer_domain_add_usb_redir(GVirDesignerDomain *design, GError **error)
 }
 
 
+/**
+ * gvir_designer_domain_add_smartcard:
+ * @design: (transfer none): the domain designer instance
+ * @error: return location for a #GError, or NULL
+ *
+ * Add a new virtual smartcard reader to @design. This will allow to
+ * share a smartcard reader between the guest and the host.
+ *
+ * Returns: (transfer full): the pointer to the new smartcard device
+ */
+GVirConfigDomainSmartcard *
+gvir_designer_domain_add_smartcard(GVirDesignerDomain *design, GError **error)
+{
+    /* FIXME: check if OS/hypervisor support smartcard, might need
+     *        libosinfo improvements
+     */
+    GVirConfigDomainSmartcardPassthrough *smartcard;
+    GVirConfigDomainChardevSourceSpiceVmc *vmc;
+    GVirConfigDomainChardevSource *source;
+
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+    g_return_val_if_fail(!error_is_set(error), NULL);
+
+    smartcard = gvir_config_domain_smartcard_passthrough_new();
+    vmc = gvir_config_domain_chardev_source_spicevmc_new();
+    source = GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(vmc);
+    gvir_config_domain_smartcard_passthrough_set_source(smartcard, source);
+    g_object_unref(G_OBJECT(vmc));
+
+    gvir_config_domain_add_device(design->priv->config,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(smartcard));
+
+    return GVIR_CONFIG_DOMAIN_SMARTCARD(smartcard);
+}
+
+
 static void gvir_designer_domain_add_power_management(GVirDesignerDomain *design)
 {
     GVirConfigDomainPowerManagement *pm;

@@ -135,6 +135,7 @@ GVirConfigDomainInterface *gvir_designer_domain_add_interface_network(GVirDesign
 GVirConfigDomainGraphics *gvir_designer_domain_add_graphics(GVirDesignerDomain *design,
                                                             GVirDesignerDomainGraphics type,
                                                             GError **error);
+GVirConfigDomainSmartcard *gvir_designer_domain_add_smartcard(GVirDesignerDomain *design, GError **error);
 GVirConfigDomainSound *gvir_designer_domain_add_sound(GVirDesignerDomain *design, GError **error);
 GVirConfigDomainRedirdev *gvir_designer_domain_add_usb_redir(GVirDesignerDomain *design, GError **error);
 

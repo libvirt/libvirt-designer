@@ -22,6 +22,7 @@ LIBVIRT_DESIGNER_0.0.2 {
 	gvir_designer_domain_add_floppy_device;
 	gvir_designer_domain_add_graphics;
 	gvir_designer_domain_add_interface_network;
+	gvir_designer_domain_add_smartcard;
 	gvir_designer_domain_add_sound;
 	gvir_designer_domain_add_usb_redir;
 
