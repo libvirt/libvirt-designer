@@ -563,6 +563,8 @@ main(int argc, char *argv[])
     static char *platform_str = NULL;
     static char *arch_str = NULL;
     static char *connect_uri = NULL;
+    static char *graphics_str = NULL;
+    GVirDesignerDomainGraphics graphics;
     static char *resources_str = NULL;
     GVirDesignerDomainResources resources;
     GOptionContext *context = NULL;
@@ -589,6 +591,8 @@ main(int argc, char *argv[])
             "add floppy to domain with PATH being source and FORMAT its format", "PATH[,FORMAT]"},
         {"interface", 'i', 0, G_OPTION_ARG_CALLBACK, add_iface_str,
             "add interface with NETWORK source. Possible ARGs: mac, link={up,down}", "NETWORK[,ARG=VAL]"},
+        {"graphics", 'g', 0, G_OPTION_ARG_STRING, &graphics_str,
+            "add graphical output to the VM. Possible values are 'spice' or 'vnc'", "GRAPHICS"},
         {"resources", 'r', 0, G_OPTION_ARG_STRING, &resources_str,
             "Set minimal or recommended values for cpu count and RAM amount", "{minimal|recommended}"},
         {NULL}
@@ -667,6 +671,21 @@ main(int argc, char *argv[])
         gvir_designer_domain_setup_resources(domain,
                                              GVIR_DESIGNER_DOMAIN_RESOURCES_RECOMMENDED,
                                              NULL);
+    }
+
+    if (graphics_str) {
+        if (g_str_equal(graphics_str, "spice"))
+            graphics = GVIR_DESIGNER_DOMAIN_GRAPHICS_SPICE;
+        else if (g_str_equal(graphics_str, "vnc"))
+            graphics = GVIR_DESIGNER_DOMAIN_GRAPHICS_VNC;
+        else {
+            print_error("Unknown value '%s' for graphics", graphics_str);
+            goto cleanup;
+        }
+        g_object_unref(gvir_designer_domain_add_graphics(domain,
+                                                         graphics,
+                                                         &error));
+        CHECK_ERROR;
     }
 
     g_list_foreach(cdrom_str_list, add_cdrom, domain);
@@ -778,6 +797,12 @@ qcow2, phy) use I<FORMAT>.
 Add an interface of type network with I<NETWORK> source. Moreover, some
 other configuration knobs can be set (possible I<ARG>s): I<mac>,
 I<link>={up|down}
+
+=item -g GRAPHICS
+
+Add a graphics device of type I<GRAPHICS>. Valid values are I<spice>
+or I<vnc>.
+
 
 =item -r RESOURCE, --resources=RESOURCES
 

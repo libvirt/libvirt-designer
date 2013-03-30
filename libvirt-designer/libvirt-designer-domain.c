@@ -348,6 +348,117 @@ static void gvir_designer_domain_add_clock(GVirDesignerDomain *design)
     g_object_unref(G_OBJECT(clock));
 }
 
+
+static GVirConfigDomainGraphics *
+gvir_designer_domain_create_graphics_desktop(GVirDesignerDomain *design,
+                                             GError **error)
+{
+    int virt_type;
+
+    virt_type = gvir_config_domain_get_virt_type(design->priv->config);
+
+    switch (virt_type) {
+    case GVIR_CONFIG_DOMAIN_VIRT_QEMU:
+    case GVIR_CONFIG_DOMAIN_VIRT_KQEMU:
+    case GVIR_CONFIG_DOMAIN_VIRT_KVM: {
+        GVirConfigDomainGraphicsSdl *sdl;
+        sdl = gvir_config_domain_graphics_sdl_new();
+        return GVIR_CONFIG_DOMAIN_GRAPHICS(sdl);
+    }
+    case GVIR_CONFIG_DOMAIN_VIRT_VBOX: {
+        GVirConfigDomainGraphicsDesktop *desktop;
+        desktop = gvir_config_domain_graphics_desktop_new();
+        return GVIR_CONFIG_DOMAIN_GRAPHICS(desktop);
+    }
+    default:
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "Virt type %d does not support this graphics output",
+                    virt_type);
+        return NULL;
+    }
+}
+
+/**
+ * gvir_designer_domain_add_graphics:
+ * @design: (transfer none): the domain designer instance
+ * @error: return location for a #GError, or NULL
+ *
+ * Add a new graphical framebuffer to @design. This allows
+ * to see what the VM displays.
+ * Remote display protocols will only be listening on localhost, and the
+ * port will be automatically allocated when the VM starts (usually
+ * starting at 5900). You can manipulate further the returned
+ * #GVirConfigDomainGraphics if you want a different behaviour.
+ * When setting up a SPICE display, the SPICE agent channel will be
+ * automatically added to the VM if it's supported and not already
+ * present.
+ *
+ * Returns: (transfer full): the pointer to the new graphical framebuffer
+ * configuration object.
+ */
+GVirConfigDomainGraphics *
+gvir_designer_domain_add_graphics(GVirDesignerDomain *design,
+                                  GVirDesignerDomainGraphics type,
+                                  GError **error)
+{
+    GVirConfigDomainGraphics *graphics;
+
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+    g_return_val_if_fail(!error_is_set(error), NULL);
+
+    switch (type) {
+    case GVIR_DESIGNER_DOMAIN_GRAPHICS_DESKTOP: {
+        graphics = gvir_designer_domain_create_graphics_desktop(design, error);
+        if (graphics == NULL)
+            return NULL;
+    }
+
+    case GVIR_DESIGNER_DOMAIN_GRAPHICS_RDP: {
+        GVirConfigDomainGraphicsRdp *rdp;
+
+        rdp = gvir_config_domain_graphics_rdp_new();
+        gvir_config_domain_graphics_rdp_set_autoport(rdp, TRUE);
+        graphics = GVIR_CONFIG_DOMAIN_GRAPHICS(rdp);
+
+        break;
+    }
+
+    case GVIR_DESIGNER_DOMAIN_GRAPHICS_SPICE: {
+        GVirConfigDomainGraphicsSpice *spice;
+
+        spice = gvir_config_domain_graphics_spice_new();
+        gvir_config_domain_graphics_spice_set_autoport(spice, TRUE);
+        /* FIXME: Should only be done for local domains */
+        gvir_config_domain_graphics_spice_set_image_compression(spice,
+                                                                GVIR_CONFIG_DOMAIN_GRAPHICS_SPICE_IMAGE_COMPRESSION_OFF);
+        graphics = GVIR_CONFIG_DOMAIN_GRAPHICS(spice);
+
+        break;
+    }
+
+    case GVIR_DESIGNER_DOMAIN_GRAPHICS_VNC: {
+        GVirConfigDomainGraphicsVnc *vnc;
+
+        vnc = gvir_config_domain_graphics_vnc_new();
+        gvir_config_domain_graphics_vnc_set_autoport(vnc, TRUE);
+        graphics = GVIR_CONFIG_DOMAIN_GRAPHICS(vnc);
+
+        break;
+    }
+
+    default:
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "Unknown graphics type: %d", type);
+        g_return_val_if_reached(NULL);
+    }
+
+    gvir_config_domain_add_device(design->priv->config,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(graphics));
+
+    return graphics;
+}
+
+
 static void gvir_designer_domain_add_power_management(GVirDesignerDomain *design)
 {
     GVirConfigDomainPowerManagement *pm;

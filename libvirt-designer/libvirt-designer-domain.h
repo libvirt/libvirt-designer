@@ -44,6 +44,13 @@ typedef enum {
     GVIR_DESIGNER_DOMAIN_RESOURCES_RECOMMENDED,
 } GVirDesignerDomainResources;
 
+typedef enum {
+    GVIR_DESIGNER_DOMAIN_GRAPHICS_DESKTOP,
+    GVIR_DESIGNER_DOMAIN_GRAPHICS_RDP,
+    GVIR_DESIGNER_DOMAIN_GRAPHICS_SPICE,
+    GVIR_DESIGNER_DOMAIN_GRAPHICS_VNC,
+} GVirDesignerDomainGraphics;
+
 typedef struct _GVirDesignerDomain GVirDesignerDomain;
 typedef struct _GVirDesignerDomainPrivate GVirDesignerDomainPrivate;
 typedef struct _GVirDesignerDomainClass GVirDesignerDomainClass;
@@ -125,6 +132,9 @@ GVirConfigDomainInterface *gvir_designer_domain_add_interface_network(GVirDesign
                                                                       const char *network,
                                                                       GError **error);
 
+GVirConfigDomainGraphics *gvir_designer_domain_add_graphics(GVirDesignerDomain *design,
+                                                            GVirDesignerDomainGraphics type,
+                                                            GError **error);
 GVirConfigDomainSound *gvir_designer_domain_add_sound(GVirDesignerDomain *design, GError **error);
 
 gboolean gvir_designer_domain_setup_resources(GVirDesignerDomain *design,
