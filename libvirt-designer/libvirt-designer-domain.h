@@ -125,6 +125,8 @@ GVirConfigDomainInterface *gvir_designer_domain_add_interface_network(GVirDesign
                                                                       const char *network,
                                                                       GError **error);
 
+GVirConfigDomainSound *gvir_designer_domain_add_sound(GVirDesignerDomain *design, GError **error);
+
 gboolean gvir_designer_domain_setup_resources(GVirDesignerDomain *design,
                                               GVirDesignerDomainResources req,
                                               GError **error);

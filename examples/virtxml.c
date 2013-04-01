@@ -642,6 +642,9 @@ main(int argc, char *argv[])
     gvir_designer_domain_setup_machine(domain, &error);
     CHECK_ERROR;
 
+    g_object_unref(gvir_designer_domain_add_sound(domain, &error));
+    CHECK_ERROR;
+
     if (arch_str) {
         gvir_designer_domain_setup_container_full(domain, arch_str, &error);
         CHECK_ERROR;

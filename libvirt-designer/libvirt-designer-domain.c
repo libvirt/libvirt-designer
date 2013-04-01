@@ -388,6 +388,7 @@ static void gvir_designer_domain_add_console(GVirDesignerDomain *design)
     g_object_unref(G_OBJECT(console));
 }
 
+
 static void gvir_designer_domain_add_input(GVirDesignerDomain *design)
 {
     GVirConfigDomainInput *input;
@@ -929,6 +930,138 @@ cleanup:
     if (filter)
         g_object_unref(filter);
     return dev_link;
+}
+
+
+static OsinfoDevice *
+gvir_designer_domain_get_preferred_soundcard(GVirDesignerDomain *design,
+                                             GError **error)
+{
+    OsinfoDevice *device = NULL;
+    OsinfoDeviceLink *dev_link;
+
+    dev_link = gvir_designer_domain_get_preferred_device(design,
+                                                         "audio",
+                                                         error);
+    if (dev_link == NULL)
+        goto cleanup;
+
+    device = osinfo_devicelink_get_target(dev_link);
+
+cleanup:
+    if (dev_link != NULL)
+        g_object_unref(dev_link);
+
+    return device;
+}
+
+static OsinfoDeviceList *
+gvir_designer_domain_get_fallback_devices(GVirDesignerDomain *design,
+                                          const char *class,
+                                          GError **error)
+{
+    OsinfoDeviceList *devices = NULL;
+    OsinfoFilter *filter;
+
+    filter = osinfo_filter_new();
+    osinfo_filter_add_constraint(filter, OSINFO_DEVICE_PROP_CLASS, class);
+    devices = gvir_designer_domain_get_supported_devices(design, filter);
+    g_object_unref(G_OBJECT(filter));
+
+    if (devices == NULL ||
+        osinfo_list_get_length(OSINFO_LIST(devices)) == 0) {
+        g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                    "No '%s' fallback devices found", class);
+        goto cleanup;
+    }
+
+    return devices;
+
+cleanup:
+    if (devices != NULL)
+        g_object_unref(devices);
+
+    return NULL;
+}
+
+
+static OsinfoDevice *
+gvir_designer_domain_get_fallback_soundcard(GVirDesignerDomain *domain,
+                                            GError **error)
+{
+    OsinfoEntity *dev = NULL;
+    OsinfoDeviceList *devices = NULL;
+
+    devices = gvir_designer_domain_get_fallback_devices(domain, "audio", error);
+    if (devices == NULL)
+        goto cleanup;
+
+    dev = osinfo_list_get_nth(OSINFO_LIST(devices), 0);
+    g_object_ref(G_OBJECT(dev));
+
+cleanup:
+    if (devices != NULL)
+        g_object_unref(G_OBJECT(devices));
+
+    return OSINFO_DEVICE(dev);
+}
+
+
+static GVirConfigDomainSoundModel
+gvir_designer_sound_model_from_soundcard(OsinfoDevice *soundcard)
+{
+    const char *name;
+
+    name = osinfo_device_get_name(soundcard);
+    if (g_strcmp0(name, "ac97") == 0) {
+        return GVIR_CONFIG_DOMAIN_SOUND_MODEL_AC97;
+    } else if (g_strcmp0(name, "ich6") == 0) {
+        return GVIR_CONFIG_DOMAIN_SOUND_MODEL_ICH6;
+    } else if (g_strcmp0(name, "es1370") == 0) {
+        return GVIR_CONFIG_DOMAIN_SOUND_MODEL_ES1370;
+    } else if (g_strcmp0(name, "sb16") == 0) {
+        return GVIR_CONFIG_DOMAIN_SOUND_MODEL_SB16;
+    } else {
+        g_warning("Unknown soundcard %s, falling back to PC speaker", name);
+        return GVIR_CONFIG_DOMAIN_SOUND_MODEL_PCSPK;
+    }
+}
+
+
+/**
+ * gvir_designer_domain_add_sound:
+ * @design: (transfer none): the domain designer instance
+ * @error: return location for a #GError, or NULL
+ *
+ * Add a new soundcard to the domain.
+ *
+ * Returns: (transfer full): the pointer to the new soundcard.
+ * If something fails NULL is returned and @error is set.
+ */
+GVirConfigDomainSound *
+gvir_designer_domain_add_sound(GVirDesignerDomain *design, GError **error)
+{
+    GVirConfigDomainSound *sound;
+    OsinfoDevice *soundcard;
+    GVirConfigDomainSoundModel model;
+
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+
+    soundcard = gvir_designer_domain_get_preferred_soundcard(design, NULL);
+    if (soundcard == NULL)
+        soundcard = gvir_designer_domain_get_fallback_soundcard(design, error);
+
+    if (soundcard == NULL)
+        return NULL;
+
+    sound = gvir_config_domain_sound_new();
+    model = gvir_designer_sound_model_from_soundcard(soundcard);
+    gvir_config_domain_sound_set_model(sound, model);
+
+    gvir_config_domain_add_device(design->priv->config,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(sound));
+
+    return sound;
 }
 
 
