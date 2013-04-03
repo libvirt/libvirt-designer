@@ -547,7 +547,7 @@ main(int argc, char *argv[])
     }
 
     if (!os) {
-        print_error("Operating system could not be find or guessed");
+        print_error("Operating system could not be found or guessed");
         goto cleanup;
     }
 
