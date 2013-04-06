@@ -103,7 +103,7 @@ test_designer_domain_LDFLAGS = \
 if WITH_INTROSPECTION
 
 LibvirtDesigner-1.0.gir: libvirt-designer-1.0.la $(G_IR_SCANNER) Makefile.am
-	$(AM_V_GEN)PKG_CONFIG_PATH=$(top_builddir) $(G_IR_SCANNER) \
+	$(AM_V_GEN) $(G_IR_SCANNER) \
                 --quiet \
                 --warn-all \
                 --namespace LibvirtDesigner \
