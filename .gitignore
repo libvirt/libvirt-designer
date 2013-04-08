@@ -53,3 +53,5 @@ docs/*.prerequisites
 docs/*.signals
 docs/*.types
 examples/*.1
+AUTHORS
+ChangeLog
