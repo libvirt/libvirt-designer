@@ -129,12 +129,14 @@ static const gchar *capslxcxml =
 static void test_domain_machine_setup(GVirDesignerDomain **design, gconstpointer opaque)
 {
     OsinfoOs *os = osinfo_os_new("http://myoperatingsystem/amazing/4.2");
+    OsinfoDb *db = osinfo_db_new();
     OsinfoPlatform *platform = osinfo_platform_new("http://myhypervisor.org/awesome/6.6.6");
     GVirConfigCapabilities *caps = gvir_config_capabilities_new_from_xml(capsqemuxml, NULL);
 
-    *design = gvir_designer_domain_new(os, platform, caps);
+    *design = gvir_designer_domain_new(db, os, platform, caps);
 
     g_object_unref(os);
+    g_object_unref(db);
     g_object_unref(platform);
     g_object_unref(caps);
 }
@@ -143,12 +145,14 @@ static void test_domain_machine_setup(GVirDesignerDomain **design, gconstpointer
 static void test_domain_container_setup(GVirDesignerDomain **design, gconstpointer opaque)
 {
     OsinfoOs *os = osinfo_os_new("http://myoperatingsystem/amazing/4.2");
+    OsinfoDb *db = osinfo_db_new();
     OsinfoPlatform *platform = osinfo_platform_new("http://myhypervisor.org/awesome/6.6.6");
     GVirConfigCapabilities *caps = gvir_config_capabilities_new_from_xml(capslxcxml, NULL);
 
-    *design = gvir_designer_domain_new(os, platform, caps);
+    *design = gvir_designer_domain_new(db, os, platform, caps);
 
     g_object_unref(os);
+    g_object_unref(db);
     g_object_unref(platform);
     g_object_unref(caps);
 }
