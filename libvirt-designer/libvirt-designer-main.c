@@ -33,7 +33,9 @@
 /**
  * gvir_designer_init:
  * @argc: (inout): pointer to application's argc
- * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
+ * @argv: (inout) (array length=argc) (allow-none) (transfer none): Address of the
+ *     <parameter>argv</parameter> parameter of main(), or %NULL. Any options
+ *     understood by GTK+ are stripped before return.
  */
 void gvir_designer_init(int *argc,
                        char ***argv)
@@ -57,7 +59,9 @@ static void gvir_log_handler(const gchar *log_domain G_GNUC_UNUSED,
 /**
  * gvir_designer_init_check:
  * @argc: (inout): pointer to application's argc
- * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
+ * @argv: (inout) (array length=argc) (allow-none) (transfer none): Address of the
+ *     <parameter>argv</parameter> parameter of main(), or %NULL. Any options
+ *     understood by GTK+ are stripped before return.
  * @err: pointer to a #GError to which a message will be posted on error
  */
 gboolean gvir_designer_init_check(int *argc,
