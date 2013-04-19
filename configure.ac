@@ -47,7 +47,7 @@ LIBVIRT_DESIGNER_VERSION_NUMBER=`expr $LIBVIRT_DESIGNER_MAJOR_VERSION \* 1000000
 # Assuming we do ever want to break soname version, this can
 # toggled. But seriously, don't touch this, unless we explicitly
 # agree to break ABI on the mailing list.
-LIBVIRT_DESIGNER_SONUM=0
+LIBVIRT_DESIGNER_SONUM=1
 
 # The following examples show what libtool will do
 #

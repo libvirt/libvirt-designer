@@ -1,4 +1,4 @@
-LIBVIRT_DESIGNER_0.0.1 {
+LIBVIRT_DESIGNER_0.0.2 {
    global:
 	gvir_designer_init;
 	gvir_designer_init_check;
