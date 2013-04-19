@@ -125,6 +125,41 @@ static const gchar *capslxcxml =
     "  </guest>"
     "</capabilities>";
 
+static const gchar *domain_machine_simple_iso_result =
+    "<domain>\n"
+    "  <devices>\n"
+    "    <disk type=\"file\">\n"
+    "      <source file=\"/foo/bar1\"/>\n"
+    "      <driver name=\"qemu\" type=\"raw\"/>\n"
+    "      <target bus=\"ide\" dev=\"hda\"/>\n"
+    "    </disk>\n"
+    "    <disk type=\"block\">\n"
+    "      <source dev=\"/foo/bar2\"/>\n"
+    "      <driver name=\"qemu\" type=\"raw\"/>\n"
+    "      <target bus=\"ide\" dev=\"hdb\"/>\n"
+    "    </disk>\n"
+    "    <disk type=\"file\">\n"
+    "      <source file=\"/foo/bar3\"/>\n"
+    "      <driver name=\"qemu\" type=\"qcow2\"/>\n"
+    "      <target bus=\"ide\" dev=\"hdc\"/>\n"
+    "    </disk>\n"
+    "    <disk type=\"block\">\n"
+    "      <source dev=\"/foo/bar4\"/>\n"
+    "      <driver name=\"qemu\" type=\"raw\"/>\n"
+    "      <target bus=\"ide\" dev=\"hdd\"/>\n"
+    "    </disk>\n"
+    "    <disk type=\"file\">\n"
+    "      <source file=\"/foo/bar5\"/>\n"
+    "      <driver name=\"qemu\" type=\"bochs\"/>\n"
+    "      <target bus=\"ide\" dev=\"hde\"/>\n"
+    "    </disk>\n"
+    "    <disk type=\"block\">\n"
+    "      <source dev=\"/foo/bar6\"/>\n"
+    "      <driver name=\"qemu\" type=\"raw\"/>\n"
+    "      <target bus=\"ide\" dev=\"hdf\"/>\n"
+    "    </disk>\n"
+    "  </devices>\n"
+    "</domain>";
 
 static void test_domain_machine_setup(GVirDesignerDomain **design, gconstpointer opaque)
 {
@@ -139,6 +174,40 @@ static void test_domain_machine_setup(GVirDesignerDomain **design, gconstpointer
     g_object_unref(db);
     g_object_unref(platform);
     g_object_unref(caps);
+}
+
+
+static void test_domain_machine_simple_disk_setup(GVirDesignerDomain **design, gconstpointer opaque)
+{
+    GError *error = NULL;
+    GVirConfigDomainDisk *disk;
+
+    test_domain_machine_setup(design, opaque);
+    g_assert(*design);
+
+    disk = gvir_designer_domain_add_cdrom_file(*design, "/foo/bar1", "raw", &error);
+    g_assert(disk);
+    g_object_unref(disk);
+
+    disk = gvir_designer_domain_add_cdrom_device(*design, "/foo/bar2", &error);
+    g_assert(disk);
+    g_object_unref(disk);
+
+    disk = gvir_designer_domain_add_disk_file(*design, "/foo/bar3", "qcow2", &error);
+    g_assert(disk);
+    g_object_unref(disk);
+
+    disk = gvir_designer_domain_add_disk_device(*design, "/foo/bar4", &error);
+    g_assert(disk);
+    g_object_unref(disk);
+
+    disk = gvir_designer_domain_add_floppy_file(*design, "/foo/bar5", "bochs", &error);
+    g_assert(disk);
+    g_object_unref(disk);
+
+    disk = gvir_designer_domain_add_disk_device(*design, "/foo/bar6", &error);
+    g_assert(disk);
+    g_object_unref(disk);
 }
 
 
@@ -241,6 +310,22 @@ static void test_domain_machine_alt_arch_run(GVirDesignerDomain **design, gconst
                     "mipsel");
 
     g_object_unref(osconfig);
+}
+
+static void test_domain_machine_simple_disk_run(GVirDesignerDomain **design, gconstpointer opaque)
+{
+    GError *error = NULL;
+    gboolean ret;
+    GVirConfigDomain *config;
+    gchar *xml;
+
+    config = gvir_designer_domain_get_config(*design);
+    xml = gvir_config_object_to_xml(GVIR_CONFIG_OBJECT(config));
+    g_test_message("XML %s", xml);
+    g_assert_cmpstr(xml,
+                    ==,
+                    domain_machine_simple_iso_result);
+    g_free(xml);
 }
 
 static void test_domain_container_host_arch_run(GVirDesignerDomain **design, gconstpointer opaque)
@@ -362,5 +447,12 @@ int main(int argc, char **argv)
                test_domain_container_setup,
                test_domain_container_alt_arch_run,
                test_domain_teardown);
+    g_test_add("/TestDesignerDomain/SimpleDisk",
+               GVirDesignerDomain *,
+               &domain,
+               test_domain_machine_simple_disk_setup,
+               test_domain_machine_simple_disk_run,
+               test_domain_teardown);
+
     return g_test_run();
 }
