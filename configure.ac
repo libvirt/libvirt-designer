@@ -19,8 +19,46 @@ LIBVIRT_DESIGNER_MAJOR_VERSION=`echo $VERSION | awk -F. '{print $1}'`
 LIBVIRT_DESIGNER_MINOR_VERSION=`echo $VERSION | awk -F. '{print $2}'`
 LIBVIRT_DESIGNER_MICRO_VERSION=`echo $VERSION | awk -F. '{print $3}'`
 LIBVIRT_DESIGNER_VERSION=$LIBVIRT_DESIGNER_MAJOR_VERSION.$LIBVIRT_DESIGNER_MINOR_VERSION.$LIBVIRT_DESIGNER_MICRO_VERSION$LIBVIRT_DESIGNER_MICRO_VERSION_SUFFIX
-LIBVIRT_DESIGNER_VERSION_INFO=`expr $LIBVIRT_DESIGNER_MAJOR_VERSION + $LIBVIRT_DESIGNER_MINOR_VERSION`:$LIBVIRT_DESIGNER_MICRO_VERSION:$LIBVIRT_DESIGNER_MINOR_VERSION
 LIBVIRT_DESIGNER_VERSION_NUMBER=`expr $LIBVIRT_DESIGNER_MAJOR_VERSION \* 1000000 + $LIBVIRT_DESIGNER_MINOR_VERSION \* 1000 + $LIBVIRT_DESIGNER_MICRO_VERSION`
+
+# In libtool terminology we need to figure out:
+#
+# CURRENT
+#     The most recent interface number that this library implements.
+#
+# REVISION
+#     The implementation number of the CURRENT interface.
+#
+# AGE
+#     The difference between the newest and oldest interfaces that this
+#     library implements.
+#
+# In other words, the library implements all the interface numbers
+# in the range from number `CURRENT - AGE' to `CURRENT'.
+#
+# Libtool assigns the soname version from `CURRENT - AGE', and we
+# don't want that to ever change, except at rare times where we
+# need to break ABI in libvirt-designer.
+#
+# We would, however, like the libvirt-designer version number reflected
+# in the so version'd symlinks, and this is based on AGE.REVISION
+# eg  libvirt-designer.so.0.AGE.REVISION
+#
+# Assuming we do ever want to break soname version, this can
+# toggled. But seriously, don't touch this, unless we explicitly
+# agree to break ABI on the mailing list.
+LIBVIRT_DESIGNER_SONUM=0
+
+# The following examples show what libtool will do
+#
+# Input: 0.9.14 ->   libvirt-designer.so.0.9.14
+# Input: 1.0.0  ->   libvirt-designer.so.0.1000.0
+# Input: 2.5.8  ->   libvirt-designer.so.0.2005.8
+#
+AGE=`expr $LIBVIRT_DESIGNER_MAJOR_VERSION '*' 1000 + $LIBVIRT_DESIGNER_MINOR_VERSION`
+REVISION=$LIBVIRT_DESIGNER_MICRO_VERSION
+CURRENT=`expr $LIBVIRT_DESIGNER_SONUM + $AGE`
+LIBVIRT_DESIGNER_VERSION_INFO=$CURRENT:$REVISION:$AGE
 
 AC_SUBST([LIBVIRT_DESIGNER_MAJOR_VERSION])
 AC_SUBST([LIBVIRT_DESIGNER_MINOR_VERSION])
