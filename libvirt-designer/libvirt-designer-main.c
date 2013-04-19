@@ -38,7 +38,7 @@
  *     understood by GTK+ are stripped before return.
  */
 void gvir_designer_init(int *argc,
-                       char ***argv)
+                        char ***argv)
 {
     GError *err = NULL;
     if (!gvir_designer_init_check(argc, argv, &err)) {
@@ -65,8 +65,8 @@ static void gvir_log_handler(const gchar *log_domain G_GNUC_UNUSED,
  * @err: pointer to a #GError to which a message will be posted on error
  */
 gboolean gvir_designer_init_check(int *argc,
-                                 char ***argv,
-                                 GError **err)
+                                  char ***argv,
+                                  GError **err)
 {
     if (!gvir_config_init_check(argc, argv, err))
         return FALSE;
