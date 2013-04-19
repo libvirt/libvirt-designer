@@ -104,8 +104,8 @@ sc_copyright_format:
 prev_version_file = /dev/null
 
 
-exclude_file_name_regexp--sc_bindtextdomain = ^(libvirt-designer/test)|(libvirt-designer/libvirt-designer-init-*)|(examples/virtxml.c)
+exclude_file_name_regexp--sc_bindtextdomain = ^libvirt-designer/(test|libvirt-designer-main\.c)|^examples/virtxml\.c$$
 
-exclude_file_name_regexp--sc_preprocessor_indentation = ^*/*.[ch]
+exclude_file_name_regexp--sc_preprocessor_indentation = ^*/*.[ch]$$
 
-exclude_file_name_regexp--sc_prohibit_strcmp = ^libvirt-designer/libvirt-designer-init-qemu.c
+exclude_file_name_regexp--sc_prohibit_strcmp = ^libvirt-designer/libvirt-designer-init-qemu.c$$
