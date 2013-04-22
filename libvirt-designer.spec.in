@@ -20,12 +20,12 @@ License: LGPLv2+
 URL: http://libvirt.org/
 Source0: http://libvirt.org/sources/designer/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: libvirt-gconfig-devel >= 0.0.9
-BuildRequires: libvirt-gobject-devel >= 0.1.3
+BuildRequires: libvirt-gconfig-devel >= @LIBVIRT_GCONFIG_REQUIRED@
+BuildRequires: libvirt-gobject-devel >= @LIBVIRT_GOBJECT_REQUIRED@
 %if %{with_introspection}
 BuildRequires: gobject-introspection-devel
 %endif
-BuildRequires: libosinfo-devel >= 0.0.5
+BuildRequires: libosinfo-devel >= @LIBOSINFO_REQUIRED@
 
 %package libs
 Group: Development/Libraries
@@ -35,7 +35,7 @@ Summary: Libvirt configuration designer libraries
 Group: Development/Libraries
 Summary: Libvirt configuration designer development headers
 Requires: %{name}-libs = %{version}-%{release}
-Requires: libvirt-gconfig-devel >= 0.0.9
+Requires: libvirt-gconfig-devel >= @LIBVIRT_GCONFIG_REQUIRED@
 
 %description
 This package provides the libvirt configuration designer command
