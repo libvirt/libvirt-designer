@@ -41,6 +41,10 @@ fi
 # exists at all times :-(
 touch ChangeLog AUTHORS
 
+# README is auto-generated from README.in at configure time,
+# but automake requires that it exists at autogen.sh time
+touch README
+
 mkdir -p build-aux
 libtoolize --copy --force
 aclocal -I m4

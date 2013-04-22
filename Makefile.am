@@ -10,6 +10,7 @@ EXTRA_DIST = \
 	$(PACKAGE).spec \
 	$(pkgconfig_DATA:%.pc=%.pc.in) \
 	AUTHORS.in \
+	README.in \
 	$(NULL)
 
 DISTCLEAN_FILES = $(PACKAGE).spec $(pkgconfig_DATA)

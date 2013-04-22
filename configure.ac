@@ -15,6 +15,10 @@ LIBVIRT_GCONFIG_REQUIRED=0.0.9
 LIBVIRT_GOBJECT_REQUIRED=0.1.3
 GOBJECT_INTROSPECTION_REQUIRED=0.10.8
 
+# for proper substitution in README.in
+AC_SUBST(LIBOSINFO_REQUIRED)
+AC_SUBST(LIBVIRT_GCONFIG_REQUIRED)
+
 LIBVIRT_DESIGNER_MAJOR_VERSION=`echo $VERSION | awk -F. '{print $1}'`
 LIBVIRT_DESIGNER_MINOR_VERSION=`echo $VERSION | awk -F. '{print $2}'`
 LIBVIRT_DESIGNER_MICRO_VERSION=`echo $VERSION | awk -F. '{print $3}'`
@@ -145,6 +149,7 @@ fi
 AM_CONDITIONAL([WITH_VALA], [test "x$enable_vala" = "xyes"])
 
 AC_OUTPUT(Makefile
+          README
           libvirt-designer/Makefile
           libvirt-designer.spec
           libvirt-designer-1.0.pc
