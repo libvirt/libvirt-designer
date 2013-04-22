@@ -24,7 +24,7 @@ Or to install into a private user specific location
   make
   make install
 
-The following mandatory dependancies are required in order to
+The following mandatory dependencies are required in order to
 build libvirt-designer
 
   libvirt-gconfig  >= 0.1.3  (part of libvirt-glib project releases)
