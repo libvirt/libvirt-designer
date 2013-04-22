@@ -10,6 +10,8 @@ EXTRA_DIST = \
 	$(PACKAGE).spec \
 	$(pkgconfig_DATA:%.pc=%.pc.in) \
 	AUTHORS.in \
+	GNUmakefile \
+	maint.mk \
 	README.in \
 	$(NULL)
 
