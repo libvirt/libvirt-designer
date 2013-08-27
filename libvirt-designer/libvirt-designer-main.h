@@ -21,7 +21,7 @@
  */
 
 #if !defined(__LIBVIRT_DESIGNER_H__) && !defined(LIBVIRT_DESIGNER_BUILD)
-#error "Only <libvirt-gdesigner/libvirt-gdesigner.h> can be included directly."
+#error "Only <libvirt-designer/libvirt-designer.h> can be included directly."
 #endif
 
 #include <osinfo/osinfo.h>
