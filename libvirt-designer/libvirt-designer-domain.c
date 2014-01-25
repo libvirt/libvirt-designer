@@ -1626,6 +1626,8 @@ gvir_designer_domain_add_disk_full(GVirDesignerDomain *design,
     gvir_config_domain_disk_set_type(disk, type);
     gvir_config_domain_disk_set_source(disk, path);
     gvir_config_domain_disk_set_driver(disk, driver);
+    g_object_unref(driver);
+    driver = NULL;
 
     controller = gvir_designer_domain_get_preferred_disk_controller(design, NULL);
     if (controller == NULL)
@@ -1656,6 +1658,8 @@ gvir_designer_domain_add_disk_full(GVirDesignerDomain *design,
 
 error:
     g_free(target_gen);
+    if (driver != NULL)
+        g_object_unref(driver);
     if (disk)
         g_object_unref(disk);
     return NULL;
