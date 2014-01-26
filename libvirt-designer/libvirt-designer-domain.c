@@ -54,7 +54,9 @@ G_DEFINE_TYPE(GVirDesignerDomain, gvir_designer_domain, G_TYPE_OBJECT);
 #define GVIR_DESIGNER_DOMAIN_ERROR gvir_designer_domain_error_quark()
 
 typedef enum {
+    GVIR_DESIGNER_DOMAIN_NIC_TYPE_BRIDGE,
     GVIR_DESIGNER_DOMAIN_NIC_TYPE_NETWORK,
+    GVIR_DESIGNER_DOMAIN_NIC_TYPE_USER,
     /* add new type here */
 } GVirDesignerDomainNICType;
 
@@ -1869,7 +1871,7 @@ cleanup:
 static GVirConfigDomainInterface *
 gvir_designer_domain_add_interface_full(GVirDesignerDomain *design,
                                         GVirDesignerDomainNICType type,
-                                        const char *network,
+                                        const char *source,
                                         GError **error)
 {
     GVirConfigDomainInterface *ret = NULL;
@@ -1878,10 +1880,18 @@ gvir_designer_domain_add_interface_full(GVirDesignerDomain *design,
     model = gvir_designer_domain_get_preferred_nic_model(design, error);
 
     switch (type) {
+    case GVIR_DESIGNER_DOMAIN_NIC_TYPE_BRIDGE:
+        ret = GVIR_CONFIG_DOMAIN_INTERFACE(gvir_config_domain_interface_bridge_new());
+        gvir_config_domain_interface_bridge_set_source(GVIR_CONFIG_DOMAIN_INTERFACE_BRIDGE(ret),
+                                                       source);
+        break;
     case GVIR_DESIGNER_DOMAIN_NIC_TYPE_NETWORK:
         ret = GVIR_CONFIG_DOMAIN_INTERFACE(gvir_config_domain_interface_network_new());
         gvir_config_domain_interface_network_set_source(GVIR_CONFIG_DOMAIN_INTERFACE_NETWORK(ret),
-                                                        network);
+                                                        source);
+        break;
+    case GVIR_DESIGNER_DOMAIN_NIC_TYPE_USER:
+        ret = GVIR_CONFIG_DOMAIN_INTERFACE(gvir_config_domain_interface_user_new());
         break;
     default:
         g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
@@ -1898,6 +1908,35 @@ cleanup:
     return ret;
 }
 
+/**
+ * gvir_designer_domain_add_interface_bridge:
+ * @design: (transfer none): the domain designer instance
+ * @bridge: (transfer none): bridge name
+ * @error: return location for a #GError, or NULL
+ *
+ * Add new network interface card into @design. The interface is
+ * of 'bridge' type and uses @bridge as the bridge device
+ *
+ * Returns: (transfer full): the pointer to the new interface.
+ */
+GVirConfigDomainInterface *
+gvir_designer_domain_add_interface_bridge(GVirDesignerDomain *design,
+                                          const char *bridge,
+                                          GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+    g_return_val_if_fail(bridge != NULL, NULL);
+    g_return_val_if_fail(!error_is_set(error), NULL);
+
+    GVirConfigDomainInterface *ret = NULL;
+
+    ret = gvir_designer_domain_add_interface_full(design,
+                                                  GVIR_DESIGNER_DOMAIN_NIC_TYPE_BRIDGE,
+                                                  bridge,
+                                                  error);
+
+    return ret;
+}
 
 /**
  * gvir_designer_domain_add_interface_network:
@@ -1924,6 +1963,33 @@ gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
     ret = gvir_designer_domain_add_interface_full(design,
                                                   GVIR_DESIGNER_DOMAIN_NIC_TYPE_NETWORK,
                                                   network,
+                                                  error);
+
+    return ret;
+}
+
+/**
+ * gvir_designer_domain_add_interface_user:
+ * @design: (transfer none): the domain designer instance
+ * @error: return location for a #GError, or NULL
+ *
+ * Add new network interface card into @design. The interface is
+ * of 'user' type.
+ *
+ * Returns: (transfer full): the pointer to the new interface.
+ */
+GVirConfigDomainInterface *
+gvir_designer_domain_add_interface_user(GVirDesignerDomain *design,
+                                        GError **error)
+{
+    g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+    g_return_val_if_fail(!error_is_set(error), NULL);
+
+    GVirConfigDomainInterface *ret = NULL;
+
+    ret = gvir_designer_domain_add_interface_full(design,
+                                                  GVIR_DESIGNER_DOMAIN_NIC_TYPE_USER,
+                                                  NULL,
                                                   error);
 
     return ret;

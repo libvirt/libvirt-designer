@@ -128,9 +128,14 @@ GVirConfigDomainDisk *gvir_designer_domain_add_floppy_device(GVirDesignerDomain 
                                                              const char *devpath,
                                                              GError **error);
 
+GVirConfigDomainInterface *gvir_designer_domain_add_interface_bridge(GVirDesignerDomain *design,
+                                                                     const char *bridge,
+                                                                     GError **error);
 GVirConfigDomainInterface *gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
                                                                       const char *network,
                                                                       GError **error);
+GVirConfigDomainInterface *gvir_designer_domain_add_interface_user(GVirDesignerDomain *design,
+                                                                   GError **error);
 
 GVirConfigDomainGraphics *gvir_designer_domain_add_graphics(GVirDesignerDomain *design,
                                                             GVirDesignerDomainGraphics type,
