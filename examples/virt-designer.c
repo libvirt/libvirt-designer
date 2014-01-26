@@ -350,6 +350,7 @@ add_iface(gpointer data,
             exit(EXIT_FAILURE);
         }
     }
+    g_object_unref(iface);
 }
 
 static gboolean
