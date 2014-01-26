@@ -1916,6 +1916,8 @@ gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
                                            GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
+    g_return_val_if_fail(network != NULL, NULL);
+    g_return_val_if_fail(!error_is_set(error), NULL);
 
     GVirConfigDomainInterface *ret = NULL;
 
