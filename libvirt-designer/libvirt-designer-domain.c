@@ -1872,7 +1872,7 @@ gvir_designer_domain_add_interface_full(GVirDesignerDomain *design,
                                         const char *network,
                                         GError **error)
 {
-    GVirConfigDomainInterface *ret;
+    GVirConfigDomainInterface *ret = NULL;
     const gchar *model = NULL;
 
     model = gvir_designer_domain_get_preferred_nic_model(design, error);
