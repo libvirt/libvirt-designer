@@ -96,7 +96,7 @@ LIBVIRT_DESIGNER_COVERAGE
 LIBVIRT_DESIGNER_INTROSPECTION
 
 AC_ARG_ENABLE([examples],
-              AS_HELP_STRING([--enable-examples], [enable virtxml example. Default is check, meaning it is enabled as long as libvirt-gobject is installed]),
+              AS_HELP_STRING([--enable-examples], [enable virt-designer example. Default is check, meaning it is enabled as long as libvirt-gobject is installed]),
               [],[enable_examples=check])
 
 if test "x$enable_examples" != "xno" ; then

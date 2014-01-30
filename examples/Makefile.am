@@ -2,10 +2,10 @@ INCLUDES = \
 		-I$(top_builddir)/libvirt-designer	\
 		-I$(top_srcdir)
 
-virtxml_LDADD = \
+virt_designer_LDADD = \
 		$(top_builddir)/libvirt-designer/libvirt-designer-1.0.la
 
-virtxml_CFLAGS = \
+virt_designer_CFLAGS = \
 		$(COVERAGE_CFLAGS) \
 		$(LIBOSINFO_CFLAGS) \
 		$(LIBVIRT_GCONFIG_CFLAGS) \
@@ -13,7 +13,7 @@ virtxml_CFLAGS = \
 		$(LIBVIRT_GOBJECT_CFLAGS) \
 		$(NULL)
 
-virtxml_LDFLAGS = \
+virt_designer_LDFLAGS = \
 		$(LIBOSINFO_LIBS) \
 		$(LIBVIRT_GCONFIG_LIBS) \
 		$(LIBVIRT_GOBJECT_LIBS)
@@ -24,9 +24,9 @@ POD2MAN = pod2man -c "Virtualization Support" -r "$(PACKAGE)-$(VERSION)"
 	$(AM_V_GEN)$(POD2MAN) $< $@
 
 if WITH_EXAMPLES
-bin_PROGRAMS = virtxml
+bin_PROGRAMS = virt-designer
 
-man1_MANS = virtxml.1
+man1_MANS = virt-designer.1
 
 CLEANFILES = $(man1_MANS)
 endif

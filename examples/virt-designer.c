@@ -1,7 +1,7 @@
 /*
- * virtxml.c: produce an domain XML
+ * virt-designer.c: produce an domain XML
  *
- * Copyright (C) 2012 Red Hat, Inc.
+ * Copyright (C) 2012, 2014 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -750,26 +750,26 @@ cleanup:
 
 =head1 NAME
 
-virtxml - Generate domain XML
+virt-designer - Generate domain XML
 
 =head1 SYNOPSIS
 
-B<virtxml> [I<OPTION>]...
+B<virt-designer> [I<OPTION>]...
 
 =head1 DESCRIPTION
 
-B<virtxml> is a command line tool for generating XML documents for
+B<virt-designer> is a command line tool for generating XML documents for
 libvirt domains. However, it cooperates with libosinfo database to guess
 the correct combination of attributes (e.g. disk driver, NIC model).
 
-B<virtxml> does not feed libvirt with generated XML though. For now,
+B<virt-designer> does not feed libvirt with generated XML though. For now,
 it's a proof of concept.
 
 =head1 OPTIONS
 
-The basic structure of arguments passed to B<virtxml> is:
+The basic structure of arguments passed to B<virt-designer> is:
 
-  virtxml [-c URI] [OPTION] [OPTION] ...
+  virt-designer [-c URI] [OPTION] [OPTION] ...
 
 However, arguments have no pre-defined order so users can type them
 in any order they like.
@@ -844,7 +844,7 @@ the I<recommended> is used.
 Usually, both B<--os> and B<--platform> are required as they are needed to
 make the right decision on driver, model, ...  when adding a new device.
 However, when adding a disk which is an installation medium (e.g. a CD-ROM or
-DVD), B<virtxml> tries to guess the OS. Something similar is done with
+DVD), B<virt-designer> tries to guess the OS. Something similar is done with
 platform. Usually, the platform is guessed from the connection URI.
 
 =head1 EXAMPLES
@@ -852,16 +852,16 @@ platform. Usually, the platform is guessed from the connection URI.
 Domain with Fedora 17 from locally stored ISO and one NIC with mac
 00:11:22:33:44:55 and link set down:
 
-  # virtxml -C Fedora-17-x86_64-Live-KDE.iso \
-            -i default,mac=00:11:22:33:44:55,link=down
+  # virt-designer -C Fedora-17-x86_64-Live-KDE.iso \
+                  -i default,mac=00:11:22:33:44:55,link=down
 
 To add multiple devices just use appropriate argument multiple times:
 
-  # virtxml -d /tmp/home.img,qcow2 \
-            -d /var/lib/libvirt/images/f17.img,qcow2 \
-            -i default,mac=00:11:22:33:44:55,link=down \
-            -i blue_network \
-            -r minimal
+  # virt-designer -d /tmp/home.img,qcow2 \
+                  -d /var/lib/libvirt/images/f17.img,qcow2 \
+                  -i default,mac=00:11:22:33:44:55,link=down \
+                  -i blue_network \
+                  -r minimal
 
 =head1 AUTHORS
 
