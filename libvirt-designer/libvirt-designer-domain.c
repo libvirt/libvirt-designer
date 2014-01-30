@@ -1580,6 +1580,7 @@ gvir_designer_domain_add_disk_full(GVirDesignerDomain *design,
 {
     GVirDesignerDomainPrivate *priv = design->priv;
     GVirConfigDomainDisk *disk = NULL;
+    GVirConfigDomainDiskDriver *driver = NULL;
     GVirConfigDomainDiskBus bus;
     gchar *target_gen = NULL;
     const char *driver_name;
@@ -1602,12 +1603,27 @@ gvir_designer_domain_add_disk_full(GVirDesignerDomain *design,
         break;
     }
 
+    driver = gvir_config_domain_disk_driver_new();
+    gvir_config_domain_disk_driver_set_name(driver, driver_name);
+    if (format) {
+        int fmt;
+
+        fmt = gvir_designer_genum_get_value(GVIR_CONFIG_TYPE_DOMAIN_DISK_FORMAT,
+                                            format, -1);
+
+        if (fmt == -1) {
+            g_set_error(error, GVIR_DESIGNER_DOMAIN_ERROR, 0,
+                        "Unknown disk format: %s", format);
+            goto error;
+        }
+
+        gvir_config_domain_disk_driver_set_format(driver, fmt);
+    }
+
     disk = gvir_config_domain_disk_new();
     gvir_config_domain_disk_set_type(disk, type);
     gvir_config_domain_disk_set_source(disk, path);
-    gvir_config_domain_disk_set_driver_name(disk, driver_name);
-    if (format)
-        gvir_config_domain_disk_set_driver_type(disk, format);
+    gvir_config_domain_disk_set_driver(disk, driver);
 
     controller = gvir_designer_domain_get_preferred_disk_controller(design, NULL);
     if (controller == NULL)

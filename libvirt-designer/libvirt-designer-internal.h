@@ -24,4 +24,6 @@
 #ifndef __LIBVIRT_DESIGNER_INTERNAL_H__
 #define __LIBVIRT_DESIGNER_INTERNAL_H__
 
+int gvir_designer_genum_get_value(GType enum_type, const char *nick, gint default_value);
+
 #endif /* __LIBVIRT_DESIGNER_INTERNAL_H__ */

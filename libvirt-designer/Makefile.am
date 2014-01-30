@@ -25,6 +25,7 @@ DESIGNER_HEADER_FILES = \
 			libvirt-designer-domain.h \
 			$(NULL)
 DESIGNER_SOURCE_FILES = \
+			libvirt-designer-internal.c \
 			libvirt-designer-main.c \
 			libvirt-designer-domain.c \
 			$(NULL)
