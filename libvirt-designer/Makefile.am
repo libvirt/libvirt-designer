@@ -82,9 +82,9 @@ libvirt-designer-enum-types.c: $(DESIGNER_HEADER_FILES) libvirt-designer-enum-ty
 	$(AM_V_GEN) ( $(GLIB_MKENUMS) --template $(srcdir)/libvirt-designer-enum-types.c.template $(DESIGNER_HEADER_FILES:%=$(srcdir)/%) ) | \
             sed -e "s/G_TYPE_VIR_CONFIG/GVIR_CONFIG_TYPE/" -e "s/g_vir/gvir/" > libvirt-designer-enum-types.c
 
-check_PROGRAMS = test-designer-domain
+noinst_PROGRAMS = test-designer-domain
 
-TESTS = $(check_PROGRAMS)
+TESTS = $(noinst_PROGRAMS)
 
 test_designer_domain_CFLAGS = \
 			-I$(top_srcdir) \
