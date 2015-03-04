@@ -1517,7 +1517,7 @@ gvir_designer_domain_get_fallback_disk_controller(GVirDesignerDomain *design,
                                                   GError **error)
 {
     OsinfoEntity *dev = NULL;
-    OsinfoDeviceList *devices;
+    OsinfoDeviceList *devices = NULL;
     OsinfoFilter *filter;
     int virt_type;
 
@@ -1552,9 +1552,11 @@ gvir_designer_domain_get_fallback_disk_controller(GVirDesignerDomain *design,
 
     dev = osinfo_list_get_nth(OSINFO_LIST(devices), 0);
     g_object_ref(G_OBJECT(dev));
-    g_object_unref(G_OBJECT(devices));
 
 cleanup:
+    if (devices != NULL)
+        g_object_unref(G_OBJECT(devices));
+
     return OSINFO_DEVICE(dev);
 }
 
