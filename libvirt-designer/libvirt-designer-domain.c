@@ -999,10 +999,12 @@ gvir_designer_domain_get_guest_full(GVirDesignerDomain *design,
 
         if (g_str_equal(guestarch, wantarch) &&
             guestos == ostype) {
+            g_object_unref(G_OBJECT(arch));
             ret = g_object_ref(guest);
             goto cleanup;
         }
 
+        g_object_unref(G_OBJECT(arch));
         tmp = tmp->next;
     }
 
