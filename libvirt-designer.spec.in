@@ -8,7 +8,7 @@
 %if 0%{?rhel} >= 6
 %define with_introspection 1
 %endif
-
+%define with_vala %{with_introspection}
 
 Name: @PACKAGE@
 Version: @VERSION@
@@ -25,6 +25,10 @@ BuildRequires: libvirt-gobject-devel >= @LIBVIRT_GOBJECT_REQUIRED@
 BuildRequires: gobject-introspection-devel
 %endif
 BuildRequires: libosinfo-devel >= @LIBOSINFO_REQUIRED@
+%if %{with_vala}
+BuildRequires: vala-tools
+BuildRequires: libosinfo-vala >= @LIBOSINFO_REQUIRED@
+%endif
 
 %package libs
 Group: Development/Libraries
@@ -35,6 +39,14 @@ Group: Development/Libraries
 Summary: Libvirt configuration designer development headers
 Requires: %{name}-libs = %{version}-%{release}
 Requires: libvirt-gconfig-devel >= @LIBVIRT_GCONFIG_REQUIRED@
+
+%if %{with_vala}
+%package vala
+Group: Development/Libraries
+Summary: Libvirt designer vala language bindings
+Requires: %{name}-libs = %{version}-%{release}
+Requires: libosinfo-vala >= @LIBOSINFO_REQUIRED@
+%endif
 
 %description
 This package provides the libvirt configuration designer command
@@ -47,6 +59,12 @@ libraries.
 %description devel
 This package provides the libvirt configuration designer development
 headers
+
+%if %{with_vala}
+%description vala
+This package provides the libvirt configuration designer vala
+language binding
+%endif
 
 %prep
 %setup -q
@@ -86,6 +104,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libvirt-designer-1.0.so.*
 %if %{with_introspection}
 %{_libdir}/girepository-1.0/LibvirtDesigner-1.0.typelib
+%endif
+
+%if %{with_vala}
+%files vala
+%defattr(-,root,root,-)
+%{_datadir}/vala/vapi/libvirt-designer-1.0.deps
+%{_datadir}/vala/vapi/libvirt-designer-1.0.vapi
 %endif
 
 %files devel
