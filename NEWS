@@ -1,6 +1,42 @@
       libvirt Designer News
       =====================
 
+0.0.2 2015-03-06
+----------------
+
+ - Bumped soname & version for ABI change
+ - Remove use of deprecated libosinfo calls
+ - Fix various memory leaks
+ - Treat errors loading the libosinfo DB as non-fatal
+   as some data may be successfully loaded
+ - Improve building of libosinfo short-id from libvirt
+   capabilities information
+ - Expose the libosinfo DB object via a property on the
+   domain object
+ - Don't set PKG_CONFIG_PATH for g-ir-scanner
+ - Auto-generate list of AUTHORS
+ - Avoid redefining _FORTIFY_SOURCE macro
+ - Fix & add gtk-doc introspection annotation
+ - Add Vala APi binding
+ - Add support for floppy & CDROM devices
+ - Use libvirt style libtool versioning csheme
+ - Add API to set list of installed drivers
+ - Add API for querying supported devices
+ - Remove many bogus assumptions in disk bus handling
+ - Populate clock settings, input devices & console
+ - Add API for enabling sound devices
+ - Add AP ifor enabling choice of graphics backends
+ - Add SPICE agent if using SPICE
+ - Add API for enabling USB redirection
+ - Add API for enabling smartcard devices
+ - Add API for enabling video devices
+ - Import latest compiler warnings from gnulib
+ - Avoid using deprecated libvirt-gconfig APIs
+ - Rename virtxml binary to virt-designer
+ - Add API for choosing network backend type
+ - Add further test cases for validing domain builder
+ - Always build test programs
+
 0.0.1 2012-10-09
 ----------------
 
