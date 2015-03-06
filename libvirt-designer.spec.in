@@ -1,7 +1,6 @@
 # -*- rpm-spec -*-
 
 %define with_introspection 0
-%define with_python 0
 
 %if 0%{?fedora} >= 15
 %define with_introspection 1
