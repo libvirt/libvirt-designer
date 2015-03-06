@@ -2,10 +2,10 @@
 
 %define with_introspection 0
 
-%if 0%{?fedora} >= 15
+%if 0%{?fedora} >= 18
 %define with_introspection 1
 %endif
-%if 0%{?rhel} >= 6
+%if 0%{?rhel} >= 7
 %define with_introspection 1
 %endif
 %define with_vala %{with_introspection}
@@ -29,6 +29,7 @@ BuildRequires: libosinfo-devel >= @LIBOSINFO_REQUIRED@
 BuildRequires: vala-tools
 BuildRequires: libosinfo-vala >= @LIBOSINFO_REQUIRED@
 %endif
+BuildRequires: /usr/bin/pod2man
 
 %package libs
 Group: Development/Libraries
@@ -39,6 +40,11 @@ Group: Development/Libraries
 Summary: Libvirt configuration designer development headers
 Requires: %{name}-libs = %{version}-%{release}
 Requires: libvirt-gconfig-devel >= @LIBVIRT_GCONFIG_REQUIRED@
+
+%package devel-doc
+Group: Development/Libraries
+Summary: Libvirt configuration designer development documentation
+Requires: %{name}-devel = %{version}-%{release}
 
 %if %{with_vala}
 %package vala
@@ -59,6 +65,10 @@ libraries.
 %description devel
 This package provides the libvirt configuration designer development
 headers
+
+%description devel-doc
+This package provides the libvirt configuration designer development
+documentation like API and exported symbols description.
 
 %if %{with_vala}
 %description vala
@@ -124,6 +134,8 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with_introspection}
 %{_datadir}/gir-1.0/LibvirtDesigner-1.0.gir
 %endif
+
+%files devel-doc
 %{_datadir}/gtk-doc/html/libvirt-designer
 
 %changelog
