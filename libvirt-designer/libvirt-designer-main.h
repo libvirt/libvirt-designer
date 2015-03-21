@@ -32,10 +32,11 @@
 G_BEGIN_DECLS
 
 void gvir_designer_init(int *argc,
-                       char ***argv);
+                        char ***argv);
+
 gboolean gvir_designer_init_check(int *argc,
-                                 char ***argv,
-                                 GError **err);
+                                  char ***argv,
+                                  GError **err);
 
 G_END_DECLS
 

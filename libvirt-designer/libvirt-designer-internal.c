@@ -26,7 +26,8 @@
 #include "libvirt-designer/libvirt-designer-internal.h"
 
 G_GNUC_INTERNAL int
-gvir_designer_genum_get_value(GType enum_type, const char *nick,
+gvir_designer_genum_get_value(GType enum_type,
+                              const char *nick,
                               gint default_value)
 {
     GEnumClass *enum_class;

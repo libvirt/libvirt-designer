@@ -79,22 +79,27 @@ GVirDesignerDomain *gvir_designer_domain_new(OsinfoDb *osinfo_db,
                                              GVirConfigCapabilities *caps);
 
 OsinfoOs *gvir_designer_domain_get_os(GVirDesignerDomain *design);
+
 OsinfoPlatform *gvir_designer_domain_get_platform(GVirDesignerDomain *design);
+
 GVirConfigCapabilities *gvir_designer_domain_get_capabilities(GVirDesignerDomain *design);
+
 GVirConfigDomain *gvir_designer_domain_get_config(GVirDesignerDomain *design);
 
-
 gboolean gvir_designer_domain_supports_machine(GVirDesignerDomain *design);
+
 gboolean gvir_designer_domain_supports_machine_full(GVirDesignerDomain *design,
                                                     const char *arch,
                                                     GVirConfigDomainOsType ostype);
+
 gboolean gvir_designer_domain_supports_container(GVirDesignerDomain *design);
+
 gboolean gvir_designer_domain_supports_container_full(GVirDesignerDomain *design,
                                                       const char *arch);
 
-
 gboolean gvir_designer_domain_setup_machine(GVirDesignerDomain *design,
                                             GError **error);
+
 gboolean gvir_designer_domain_setup_machine_full(GVirDesignerDomain *design,
                                                  const char *arch,
                                                  GVirConfigDomainOsType ostype,
@@ -102,28 +107,34 @@ gboolean gvir_designer_domain_setup_machine_full(GVirDesignerDomain *design,
 
 gboolean gvir_designer_domain_setup_container(GVirDesignerDomain *design,
                                               GError **error);
+
 gboolean gvir_designer_domain_setup_container_full(GVirDesignerDomain *design,
                                                    const char *arch,
                                                    GError **error);
 
 GVirConfigDomainDisk *gvir_designer_domain_add_cdrom_file(GVirDesignerDomain *design,
-                                                         const char *filepath,
-                                                         const char *format,
-                                                         GError **error);
+                                                          const char *filepath,
+                                                          const char *format,
+                                                          GError **error);
+
 GVirConfigDomainDisk *gvir_designer_domain_add_cdrom_device(GVirDesignerDomain *design,
-                                                           const char *devpath,
-                                                           GError **error);
+                                                            const char *devpath,
+                                                            GError **error);
+
 GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *design,
                                                          const char *filepath,
                                                          const char *format,
                                                          GError **error);
+
 GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *design,
                                                            const char *devpath,
                                                            GError **error);
+
 GVirConfigDomainDisk *gvir_designer_domain_add_floppy_file(GVirDesignerDomain *design,
                                                            const char *filepath,
                                                            const char *format,
                                                            GError **error);
+
 GVirConfigDomainDisk *gvir_designer_domain_add_floppy_device(GVirDesignerDomain *design,
                                                              const char *devpath,
                                                              GError **error);
@@ -131,18 +142,27 @@ GVirConfigDomainDisk *gvir_designer_domain_add_floppy_device(GVirDesignerDomain 
 GVirConfigDomainInterface *gvir_designer_domain_add_interface_bridge(GVirDesignerDomain *design,
                                                                      const char *bridge,
                                                                      GError **error);
+
 GVirConfigDomainInterface *gvir_designer_domain_add_interface_network(GVirDesignerDomain *design,
                                                                       const char *network,
                                                                       GError **error);
+
 GVirConfigDomainInterface *gvir_designer_domain_add_interface_user(GVirDesignerDomain *design,
                                                                    GError **error);
 
 GVirConfigDomainGraphics *gvir_designer_domain_add_graphics(GVirDesignerDomain *design,
                                                             GVirDesignerDomainGraphics type,
                                                             GError **error);
-GVirConfigDomainSmartcard *gvir_designer_domain_add_smartcard(GVirDesignerDomain *design, GError **error);
-GVirConfigDomainSound *gvir_designer_domain_add_sound(GVirDesignerDomain *design, GError **error);
-GVirConfigDomainRedirdev *gvir_designer_domain_add_usb_redir(GVirDesignerDomain *design, GError **error);
+
+GVirConfigDomainSmartcard *gvir_designer_domain_add_smartcard(GVirDesignerDomain *design,
+                                                              GError **error);
+
+GVirConfigDomainSound *gvir_designer_domain_add_sound(GVirDesignerDomain *design,
+                                                      GError **error);
+
+GVirConfigDomainRedirdev *gvir_designer_domain_add_usb_redir(GVirDesignerDomain *design,
+                                                             GError **error);
+
 GVirConfigDomainVideo *gvir_designer_domain_add_video(GVirDesignerDomain *design,
                                                       GError **error);
 
@@ -152,6 +172,7 @@ gboolean gvir_designer_domain_setup_resources(GVirDesignerDomain *design,
 
 gboolean gvir_designer_domain_remove_all_drivers(GVirDesignerDomain *design,
                                                  GError **error);
+
 gboolean gvir_designer_domain_add_driver(GVirDesignerDomain *design,
                                          const char *driver_id,
                                          GError **error);

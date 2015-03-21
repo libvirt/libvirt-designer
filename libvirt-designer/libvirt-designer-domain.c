@@ -66,7 +66,8 @@ gvir_designer_domain_error_quark(void)
     return g_quark_from_static_string("gvir-designer-domain");
 }
 
-static gboolean error_is_set(GError **error)
+static gboolean
+error_is_set(GError **error)
 {
     return ((error != NULL) && (*error != NULL));
 }
@@ -84,10 +85,11 @@ enum {
     PROP_OSINFO_DB,
 };
 
-static void gvir_designer_domain_get_property(GObject *object,
-                                              guint prop_id,
-                                              GValue *value,
-                                              GParamSpec *pspec)
+static void
+gvir_designer_domain_get_property(GObject *object,
+                                  guint prop_id,
+                                  GValue *value,
+                                  GParamSpec *pspec)
 {
     g_return_if_fail(GVIR_DESIGNER_IS_DOMAIN(object));
 
@@ -121,10 +123,11 @@ static void gvir_designer_domain_get_property(GObject *object,
 }
 
 
-static void gvir_designer_domain_set_property(GObject *object,
-                                              guint prop_id,
-                                              const GValue *value,
-                                              GParamSpec *pspec)
+static void
+gvir_designer_domain_set_property(GObject *object,
+                                  guint prop_id,
+                                  const GValue *value,
+                                  GParamSpec *pspec)
 {
     g_return_if_fail(GVIR_DESIGNER_IS_DOMAIN(object));
 
@@ -161,7 +164,8 @@ static void gvir_designer_domain_set_property(GObject *object,
 }
 
 
-static void gvir_designer_domain_finalize(GObject *object)
+static void
+gvir_designer_domain_finalize(GObject *object)
 {
     GVirDesignerDomain *conn = GVIR_DESIGNER_DOMAIN(object);
     GVirDesignerDomainPrivate *priv = conn->priv;
@@ -181,7 +185,8 @@ static void gvir_designer_domain_finalize(GObject *object)
 }
 
 
-static void gvir_designer_domain_class_init(GVirDesignerDomainClass *klass)
+static void
+gvir_designer_domain_class_init(GVirDesignerDomainClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
@@ -319,7 +324,8 @@ end:
 
 
 static GList *
-gvir_designer_domain_get_device_by_type(GVirDesignerDomain *design, GType type)
+gvir_designer_domain_get_device_by_type(GVirDesignerDomain *design,
+                                        GType type)
 {
     GList *devices;
     GList *it;
@@ -341,7 +347,8 @@ gvir_designer_domain_get_device_by_type(GVirDesignerDomain *design, GType type)
 }
 
 
-static void gvir_designer_domain_add_clock(GVirDesignerDomain *design)
+static void
+gvir_designer_domain_add_clock(GVirDesignerDomain *design)
 {
     GVirConfigDomainClock *clock;
     GVirConfigDomainTimer *timer;
@@ -441,8 +448,9 @@ gvir_designer_domain_supports_spice_channel(GVirDesignerDomain *design)
 }
 
 
-static gboolean gvir_designer_domain_add_spice_channel(GVirDesignerDomain *design,
-                                                       GError **error)
+static gboolean
+gvir_designer_domain_add_spice_channel(GVirDesignerDomain *design,
+                                       GError **error)
 {
     GVirConfigDomainChannel *channel;
     GVirConfigDomainChardevSourceSpiceVmc *vmc;
@@ -674,7 +682,8 @@ gvir_designer_domain_add_usb_controllers(GVirDesignerDomain *design)
  * Returns: (transfer full): the pointer to the new USB redir channel
  */
 GVirConfigDomainRedirdev *
-gvir_designer_domain_add_usb_redir(GVirDesignerDomain *design, GError **error)
+gvir_designer_domain_add_usb_redir(GVirDesignerDomain *design,
+                                   GError **error)
 {
     /* FIXME: check if OS/hypervisor support USB
      *        check if SPICE is being used
@@ -717,7 +726,8 @@ gvir_designer_domain_add_usb_redir(GVirDesignerDomain *design, GError **error)
  * Returns: (transfer full): the pointer to the new smartcard device
  */
 GVirConfigDomainSmartcard *
-gvir_designer_domain_add_smartcard(GVirDesignerDomain *design, GError **error)
+gvir_designer_domain_add_smartcard(GVirDesignerDomain *design,
+                                   GError **error)
 {
     /* FIXME: check if OS/hypervisor support smartcard, might need
      *        libosinfo improvements
@@ -742,7 +752,8 @@ gvir_designer_domain_add_smartcard(GVirDesignerDomain *design, GError **error)
 }
 
 
-static void gvir_designer_domain_add_power_management(GVirDesignerDomain *design)
+static void
+gvir_designer_domain_add_power_management(GVirDesignerDomain *design)
 {
     GVirConfigDomainPowerManagement *pm;
 
@@ -754,7 +765,8 @@ static void gvir_designer_domain_add_power_management(GVirDesignerDomain *design
     g_object_unref(G_OBJECT(pm));
 }
 
-static void gvir_designer_domain_set_lifecycle(GVirDesignerDomain *design)
+static void
+gvir_designer_domain_set_lifecycle(GVirDesignerDomain *design)
 {
     gvir_config_domain_set_lifecycle(design->priv->config,
                                      GVIR_CONFIG_DOMAIN_LIFECYCLE_ON_POWEROFF,
@@ -767,7 +779,8 @@ static void gvir_designer_domain_set_lifecycle(GVirDesignerDomain *design)
                                      GVIR_CONFIG_DOMAIN_LIFECYCLE_DESTROY);
 }
 
-static void gvir_designer_domain_add_console(GVirDesignerDomain *design)
+static void
+gvir_designer_domain_add_console(GVirDesignerDomain *design)
 {
     GVirConfigDomainConsole *console;
     GVirConfigDomainChardevSourcePty *pty;
@@ -784,7 +797,8 @@ static void gvir_designer_domain_add_console(GVirDesignerDomain *design)
 }
 
 
-static void gvir_designer_domain_add_input(GVirDesignerDomain *design)
+static void
+gvir_designer_domain_add_input(GVirDesignerDomain *design)
 {
     GVirConfigDomainInput *input;
 
@@ -798,7 +812,8 @@ static void gvir_designer_domain_add_input(GVirDesignerDomain *design)
 }
 
 
-static void gvir_designer_domain_init(GVirDesignerDomain *design)
+static void
+gvir_designer_domain_init(GVirDesignerDomain *design)
 {
     GVirDesignerDomainPrivate *priv;
     g_debug("Init GVirDesignerDomain=%p", design);
@@ -809,10 +824,11 @@ static void gvir_designer_domain_init(GVirDesignerDomain *design)
 }
 
 
-GVirDesignerDomain *gvir_designer_domain_new(OsinfoDb *db,
-                                             OsinfoOs *os,
-                                             OsinfoPlatform *platform,
-                                             GVirConfigCapabilities *caps)
+GVirDesignerDomain *
+gvir_designer_domain_new(OsinfoDb *db,
+                         OsinfoOs *os,
+                         OsinfoPlatform *platform,
+                         GVirConfigCapabilities *caps)
 {
     return GVIR_DESIGNER_DOMAIN(g_object_new(GVIR_DESIGNER_TYPE_DOMAIN,
                                              "osinfo-db", db,
@@ -832,7 +848,8 @@ GVirDesignerDomain *gvir_designer_domain_new(OsinfoDb *db,
  *
  * Returns: (transfer none): the operating system
  */
-OsinfoOs *gvir_designer_domain_get_os(GVirDesignerDomain *design)
+OsinfoOs *
+gvir_designer_domain_get_os(GVirDesignerDomain *design)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
 
@@ -850,7 +867,8 @@ OsinfoOs *gvir_designer_domain_get_os(GVirDesignerDomain *design)
  *
  * Returns: (transfer none): the virtualization platform
  */
-OsinfoPlatform *gvir_designer_domain_get_platform(GVirDesignerDomain *design)
+OsinfoPlatform *
+gvir_designer_domain_get_platform(GVirDesignerDomain *design)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
 
@@ -868,7 +886,8 @@ OsinfoPlatform *gvir_designer_domain_get_platform(GVirDesignerDomain *design)
  *
  * Returns: (transfer none): the capabilities
  */
-GVirConfigCapabilities *gvir_designer_domain_get_capabilities(GVirDesignerDomain *design)
+GVirConfigCapabilities *
+gvir_designer_domain_get_capabilities(GVirDesignerDomain *design)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
 
@@ -887,7 +906,8 @@ GVirConfigCapabilities *gvir_designer_domain_get_capabilities(GVirDesignerDomain
  *
  * Returns: (transfer none): the domain config
  */
-GVirConfigDomain *gvir_designer_domain_get_config(GVirDesignerDomain *design)
+GVirConfigDomain *
+gvir_designer_domain_get_config(GVirDesignerDomain *design)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
 
@@ -1015,7 +1035,8 @@ cleanup:
 }
 
 
-gboolean gvir_designer_domain_supports_machine(GVirDesignerDomain *design)
+gboolean
+gvir_designer_domain_supports_machine(GVirDesignerDomain *design)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
 
@@ -1033,9 +1054,10 @@ gboolean gvir_designer_domain_supports_machine(GVirDesignerDomain *design)
 }
 
 
-gboolean gvir_designer_domain_supports_machine_full(GVirDesignerDomain *design,
-                                                    const char *arch,
-                                                    GVirConfigDomainOsType ostype)
+gboolean
+gvir_designer_domain_supports_machine_full(GVirDesignerDomain *design,
+                                           const char *arch,
+                                           GVirConfigDomainOsType ostype)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
 
@@ -1050,7 +1072,8 @@ gboolean gvir_designer_domain_supports_machine_full(GVirDesignerDomain *design,
     return FALSE;
 }
 
-gboolean gvir_designer_domain_supports_container(GVirDesignerDomain *design)
+gboolean
+gvir_designer_domain_supports_container(GVirDesignerDomain *design)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
 
@@ -1068,8 +1091,9 @@ gboolean gvir_designer_domain_supports_container(GVirDesignerDomain *design)
     return FALSE;
 }
 
-gboolean gvir_designer_domain_supports_container_full(GVirDesignerDomain *design,
-                                                      const char *arch)
+gboolean
+gvir_designer_domain_supports_container_full(GVirDesignerDomain *design,
+                                             const char *arch)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
 
@@ -1174,8 +1198,9 @@ cleanup:
 }
 
 
-gboolean gvir_designer_domain_setup_machine(GVirDesignerDomain *design,
-                                            GError **error)
+gboolean
+gvir_designer_domain_setup_machine(GVirDesignerDomain *design,
+                                   GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
 
@@ -1203,10 +1228,11 @@ cleanup:
 }
 
 
-gboolean gvir_designer_domain_setup_machine_full(GVirDesignerDomain *design,
-                                                 const char *arch,
-                                                 GVirConfigDomainOsType ostype,
-                                                 GError **error)
+gboolean
+gvir_designer_domain_setup_machine_full(GVirDesignerDomain *design,
+                                        const char *arch,
+                                        GVirConfigDomainOsType ostype,
+                                        GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
 
@@ -1232,8 +1258,9 @@ cleanup:
 }
 
 
-gboolean gvir_designer_domain_setup_container(GVirDesignerDomain *design,
-                                              GError **error)
+gboolean
+gvir_designer_domain_setup_container(GVirDesignerDomain *design,
+                                     GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
 
@@ -1262,9 +1289,10 @@ cleanup:
 }
 
 
-gboolean gvir_designer_domain_setup_container_full(GVirDesignerDomain *design,
-                                                   const char *arch,
-                                                   GError **error)
+gboolean
+gvir_designer_domain_setup_container_full(GVirDesignerDomain *design,
+                                          const char *arch,
+                                          GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
 
@@ -1682,10 +1710,11 @@ error:
  * Returns: (transfer full): the pointer to new disk.
  * If something fails NULL is returned and @error is set.
  */
-GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *design,
-                                                         const char *filepath,
-                                                         const char *format,
-                                                         GError **error)
+GVirConfigDomainDisk *
+gvir_designer_domain_add_disk_file(GVirDesignerDomain *design,
+                                   const char *filepath,
+                                   const char *format,
+                                   GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
 
@@ -1713,9 +1742,10 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_file(GVirDesignerDomain *des
  * Returns: (transfer full): the pointer to the new disk.
  * If something fails NULL is returned and @error is set.
  */
-GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *design,
-                                                           const char *devpath,
-                                                           GError **error)
+GVirConfigDomainDisk *
+gvir_designer_domain_add_disk_device(GVirDesignerDomain *design,
+                                     const char *devpath,
+                                     GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
 
@@ -1743,10 +1773,11 @@ GVirConfigDomainDisk *gvir_designer_domain_add_disk_device(GVirDesignerDomain *d
  * Returns: (transfer full): the pointer to new cdrom.
  * If something fails NULL is returned and @error is set.
  */
-GVirConfigDomainDisk *gvir_designer_domain_add_cdrom_file(GVirDesignerDomain *design,
-                                                          const char *filepath,
-                                                          const char *format,
-                                                          GError **error)
+GVirConfigDomainDisk *
+gvir_designer_domain_add_cdrom_file(GVirDesignerDomain *design,
+                                    const char *filepath,
+                                    const char *format,
+                                    GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
 
@@ -1774,9 +1805,10 @@ GVirConfigDomainDisk *gvir_designer_domain_add_cdrom_file(GVirDesignerDomain *de
  * Returns: (transfer full): the pointer to the new cdrom.
  * If something fails NULL is returned and @error is set.
  */
-GVirConfigDomainDisk *gvir_designer_domain_add_cdrom_device(GVirDesignerDomain *design,
-                                                            const char *devpath,
-                                                            GError **error)
+GVirConfigDomainDisk *
+gvir_designer_domain_add_cdrom_device(GVirDesignerDomain *design,
+                                      const char *devpath,
+                                      GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
 
@@ -1805,10 +1837,11 @@ GVirConfigDomainDisk *gvir_designer_domain_add_cdrom_device(GVirDesignerDomain *
  * Returns: (transfer full): the pointer to new floppy.
  * If something fails NULL is returned and @error is set.
  */
-GVirConfigDomainDisk *gvir_designer_domain_add_floppy_file(GVirDesignerDomain *design,
-                                                           const char *filepath,
-                                                           const char *format,
-                                                           GError **error)
+GVirConfigDomainDisk *
+gvir_designer_domain_add_floppy_file(GVirDesignerDomain *design,
+                                     const char *filepath,
+                                     const char *format,
+                                     GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
 
@@ -1836,9 +1869,10 @@ GVirConfigDomainDisk *gvir_designer_domain_add_floppy_file(GVirDesignerDomain *d
  * Returns: (transfer full): the pointer to the new floppy.
  * If something fails NULL is returned and @error is set.
  */
-GVirConfigDomainDisk *gvir_designer_domain_add_floppy_device(GVirDesignerDomain *design,
-                                                             const char *devpath,
-                                                             GError **error)
+GVirConfigDomainDisk *
+gvir_designer_domain_add_floppy_device(GVirDesignerDomain *design,
+                                       const char *devpath,
+                                       GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), NULL);
 
@@ -2146,7 +2180,8 @@ end:
  * Returns: (transfer full): the pointer to the new video device.
  */
 GVirConfigDomainVideo *
-gvir_designer_domain_add_video(GVirDesignerDomain *design, GError **error)
+gvir_designer_domain_add_video(GVirDesignerDomain *design,
+                               GError **error)
 {
     GVirConfigDomainVideo *video;
     const gchar *model_str = NULL;
@@ -2221,9 +2256,10 @@ gvir_designer_domain_get_resources(OsinfoResourcesList *res_list,
  *
  * Returns: (transfer none): TRUE when successfully set, FALSE otherwise.
  */
-gboolean gvir_designer_domain_setup_resources(GVirDesignerDomain *design,
-                                              GVirDesignerDomainResources req,
-                                              GError **error)
+gboolean
+gvir_designer_domain_setup_resources(GVirDesignerDomain *design,
+                                     GVirDesignerDomainResources req,
+                                     GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
     gboolean ret = FALSE;
@@ -2285,9 +2321,10 @@ cleanup:
  *
  * Returns: (transfer none): TRUE when successfully set, FALSE otherwise.
  */
-gboolean gvir_designer_domain_add_driver(GVirDesignerDomain *design,
-                                         const char *driver_id,
-                                         GError **error)
+gboolean
+gvir_designer_domain_add_driver(GVirDesignerDomain *design,
+                                const char *driver_id,
+                                GError **error)
 {
     OsinfoEntity *driver;
     OsinfoDeviceDriverList *drivers;
@@ -2330,8 +2367,9 @@ end:
  * Returns: (transfer none): TRUE when successfully set, FALSE otherwise.
  * @see_also gvir_designer_domain_add_driver()
  */
-gboolean gvir_designer_domain_remove_all_drivers(GVirDesignerDomain *design,
-                                                 GError **error)
+gboolean
+gvir_designer_domain_remove_all_drivers(GVirDesignerDomain *design,
+                                        GError **error)
 {
     g_return_val_if_fail(GVIR_DESIGNER_IS_DOMAIN(design), FALSE);
     g_return_val_if_fail(!error_is_set(error), FALSE);
