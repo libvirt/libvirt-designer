@@ -543,6 +543,8 @@ gvir_designer_domain_add_graphics(GVirDesignerDomain *design,
         graphics = gvir_designer_domain_create_graphics_desktop(design, error);
         if (graphics == NULL)
             return NULL;
+
+        break;
     }
 
     case GVIR_DESIGNER_DOMAIN_GRAPHICS_RDP: {
