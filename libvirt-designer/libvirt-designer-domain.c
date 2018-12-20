@@ -993,8 +993,7 @@ gvir_designer_domain_get_guest(GVirDesignerDomain *design,
         tmp = tmp->next;
     }
 
-    g_list_foreach(guests, (GFunc)g_object_unref, NULL);
-    g_list_free(guests);
+    g_list_free_full(guests, g_object_unref);
     return ret;
 }
 
@@ -1031,8 +1030,7 @@ gvir_designer_domain_get_guest_full(GVirDesignerDomain *design,
     }
 
 cleanup:
-    g_list_foreach(guests, (GFunc)g_object_unref, NULL);
-    g_list_free(guests);
+    g_list_free_full(guests, g_object_unref);
     return ret;
 }
 
@@ -1150,8 +1148,7 @@ gvir_designer_domain_best_guest_domain(GVirConfigCapabilitiesGuestArch *arch,
                 gvir_config_capabilities_guest_arch_get_name(arch));
 
 cleanup:
-    g_list_foreach(domains, (GFunc)g_object_unref, NULL);
-    g_list_free(domains);
+    g_list_free_full(domains, g_object_unref);
     return ret;
 }
 
