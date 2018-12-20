@@ -86,10 +86,8 @@ load_osinfo(void)
 static gint
 entity_compare(gconstpointer a, gconstpointer b)
 {
-    const gchar *id_a = osinfo_entity_get_param_value(OSINFO_ENTITY(a),
-                                                      OSINFO_ENTITY_PROP_ID);
-    const gchar *id_b = osinfo_entity_get_param_value(OSINFO_ENTITY(b),
-                                                      OSINFO_ENTITY_PROP_ID);
+    const gchar *id_a = osinfo_entity_get_id(OSINFO_ENTITY(a));
+    const gchar *id_b = osinfo_entity_get_id(OSINFO_ENTITY(b));
     return g_strcmp0(id_a, id_b);
 }
 
@@ -117,8 +115,7 @@ print_oses(const gchar *option_name,
     oses = g_list_sort(oses, entity_compare);
     for (os_iter = oses; os_iter; os_iter = os_iter->next) {
         OsinfoOs *os = OSINFO_OS(os_iter->data);
-        const char *id = osinfo_entity_get_param_value(OSINFO_ENTITY(os),
-                                                       OSINFO_ENTITY_PROP_ID);
+        const char *id = osinfo_entity_get_id(OSINFO_ENTITY(os));
 
         printf("%s\n", id);
     }
@@ -158,8 +155,7 @@ print_platforms(const gchar *option_name,
     platforms = g_list_sort(platforms, entity_compare);
     for (platform_iter = platforms; platform_iter; platform_iter = platform_iter->next) {
         OsinfoPlatform *platform = OSINFO_PLATFORM(platform_iter->data);
-        const char *id = osinfo_entity_get_param_value(OSINFO_ENTITY(platform),
-                                                       OSINFO_ENTITY_PROP_ID);
+        const char *id = osinfo_entity_get_id(OSINFO_ENTITY(platform));
 
         printf("%s\n", id);
     }
@@ -372,8 +368,7 @@ find_entity_by_short_id(OsinfoList *ent_list,
 
     list = osinfo_list_get_elements(ent_list);
     for (list_iterator = list; list_iterator; list_iterator = list_iterator->next) {
-        const char *id = osinfo_entity_get_param_value(list_iterator->data,
-                                                       OSINFO_PRODUCT_PROP_SHORT_ID);
+        const char *id = osinfo_product_get_short_id(OSINFO_PRODUCT(list_iterator->data));
 
         if (!g_strcmp0(id, short_id)) {
             ret = list_iterator->data;
