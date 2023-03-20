@@ -34,25 +34,9 @@ build libvirt-designer
 Communication
 -------------
 
-To communicate with the development team, or to post patches
-there is a technical mailing list:
+Repository, development and discussions are hosted at
 
-   https://www.redhat.com/mailman/listinfo/libvir-list
-
-End user support can be found at
-
-   https://www.redhat.com/mailman/listinfo/libvirt-users
-
-There is also a mailing list for new release announcements:
-
-  https://www.redhat.com/mailman/listinfo/libvirt-announce
-
-Bugs found when using an OS distribution's binary packages should
-be reported to the OS vendors' own bug tracker first.
-
-The latest libvirt-designer code can be found in GIT at:
-
-   http://libvirt.org/git/?p=libvirt-designer.git
+   https://gitlab.com/libvirt/libvirt-designer
 
 Licensing
 ---------
